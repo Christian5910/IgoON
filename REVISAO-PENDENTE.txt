@@ -1,0 +1,130 @@
+IgoON! - REVISÃO INDEPENDENTE CONCLUÍDA
+Data: 2026-10-25
+
+STATUS
+As duas revisões pedidas neste arquivo foram executadas por agentes separados,
+uma de cada vez, sem participação na construção original. A primeira examinou
+código e interface; a segunda, conteúdo, regras de Go e japonês. Os defeitos
+confirmados foram corrigidos. Depois houve nova conferência independente das
+correções de código e inclusão de testes para os dois casos adicionais encontrados.
+
+CORREÇÕES DE CÓDIGO E INTERFACE
+- Continuar daqui no último lance retoma o cálculo da CPU que a revisão cancelou.
+- Cancelar a abertura de SGF mantém a CPU funcionando. O cálculo só é cancelado
+  quando o usuário confirma a substituição da partida.
+- Continuar do lance zero libera as opções e, quando o computador deve abrir,
+  espera o botão Iniciar partida, sem colocar uma pedra no estado pronto.
+- Dados salvos com estrutura inválida são rejeitados pelo motor, antes de montar
+  o tabuleiro. Listas corrompidas de mortas/neutros não derrubam a interface.
+  O estado visual restaurado acompanha a fase real do jogo.
+- Oponente, nível, tamanho, handicap, komi e opções salvas são normalizados.
+  Contagens negativas, fracionárias ou inválidas de estatísticas são descartadas.
+- Respostas de dica, território e sugestão só são aplicadas à partida, posição,
+  fase e modo que as pediram. Erros atrasados também são ignorados.
+- Cancelar uma operação encerra suas Promises pendentes e libera Sugerir.
+  Marcação manual, contagem e retomada invalidam sugestões antigas.
+- O uso de Dica/Território é salvo imediatamente como assistência, sem depender
+  do próximo lance ou do evento de saída da página.
+- Resultados SGF reconhecidos são preservados na importação, restauração e
+  exportação: vitória por pontos, desistência, tempo, falta, empate e sem resultado.
+  Um placar importado sem detalhamento mostra essa limitação na interface.
+  Isso também funciona em arquivos com apenas a posição inicial, sem lances.
+- Placar e texto da marcação reaparecem ao sair da revisão ou voltar do modo
+  de estudo, inclusive depois de recarregar com outro modo selecionado.
+
+CORREÇÕES DE CONTEÚDO E JAPONÊS
+- 曲三 nos problemas v02/v04: leitura きょくさん, romaji kyokusan.
+- 定石 no guia: jōseki, coerente com o furigana e a tabela de termos.
+- Atari: uma pedra com uma liberdade pode ser capturada se não escapar;
+  a captura no lance seguinte não é inevitável.
+- Dois olhos: quando restam dois olhos reais de um ponto, já a primeira jogada
+  adversária em qualquer um deles seria suicídio, porque o outro impede a captura.
+  A explicação distingue esse caso de um espaço de olho maior.
+- Seki: os olhos dos grupos envolvidos também não fazem território na regra
+  japonesa. Guia, lição, glossário e instrução de marcação foram ajustados.
+- Superko não garante vencedor: o komi inteiro configurável permite empate.
+- As diferenças entre contagem de área e território não estão limitadas a um ponto.
+- Terceira repetição automática e retomada pela ordem normal dos turnos foram
+  identificadas como simplificações do IgoON!. No regulamento japonês oficial,
+  repetição sem resultado exige acordo, e o adversário de quem solicita a
+  retomada tem direito ao primeiro lance.
+
+CONFERÊNCIAS SEM ALTERAÇÃO NECESSÁRIA
+- As 57 entradas da tabela TERMOS foram conferidas, incluindo kanji/kana,
+  furigana, romaji, macrons, okurigana e significado.
+- 九路盤, 十三路盤 e 十九路盤 têm leituras corretas.
+- 呼吸点, 禁じ手, 劫材, 持碁 e 無勝負 foram conferidos.
+- 上げ浜 é uma grafia válida; アゲハマ é frequente nos materiais didáticos oficiais.
+  A grafia existente foi mantida.
+- As formas geométricas e coordenadas das explicações dos 24 problemas conferem.
+- Nenhum defeito confirmado nos tokens de estudo.js para respostas atrasadas,
+  troca de problema, cliques rápidos ou Ver solução; esse arquivo foi mantido.
+- Não foram encontrados travessões nos arquivos de conteúdo examinados.
+
+FONTES PRINCIPAIS DA REVISÃO DE CONTEÚDO
+Regulamento da Nihon Ki-in:
+https://www.nihonkiin.or.jp/match/kiyaku/zenbun.html
+Artigo 8, território e seki:
+https://www.nihonkiin.or.jp/match/kiyaku/kiyaku08.html
+Artigo 9, retomada:
+https://www.nihonkiin.or.jp/match/kiyaku/kiyaku09.html
+Artigo 12, repetição:
+https://www.nihonkiin.or.jp/match/kiyaku/kiyaku11-12.html
+Tabuleiros e leituras:
+https://www.nihonkiin.or.jp/teach/lesson/school/kigu.html
+Dicionário da 日本囲碁連盟, 曲三:
+https://www.ntkr.co.jp/igoyogo/yogo_273.html
+
+TESTES DESTA REVISÃO
+Suíte incluída: testes-igoon/revisao.cjs.
+Resultado: 27 testes passaram, 0 falharam.
+
+Cobertura executada em Node e Chrome/Chromium no Windows:
+- Reproduções dos defeitos antes das correções e testes de regressão depois.
+- Restauração inválida, preferências, estado/fase e listas salvas corrompidas.
+- CPU durante revisão, cancelamento de SGF, troca de modo e Novo jogo.
+- Dica/estimativa/sugestão atrasadas; marcação manual e operações canceladas.
+- Desfazer com abertura da CPU, passe e handicap; histórico com RETOMAR.
+- Continuar daqui no último lance e no lance zero com jogador Branco.
+- Estatísticas de término sem duplicação ao recarregar; assistência salva no uso.
+- SGF com resultado por pontos, desistência, empate e Void; posição inicial
+  terminada sem lances; exibição e restauração sem placar detalhado.
+- As 11 lições inteiras pela interface, com Worker real nos passos de problema.
+- Os 24 problemas novamente resolvidos pelo solucionador do projeto, sem estouro
+  do limite: todos os lances iniciais vencedores conferem com os dados.
+- As 24 sequências reproduzidas no motor, com cores, lances legais, coordenadas
+  das respostas e resultado final (captura ou vida de Benson) conferidos.
+- Worker real nos cinco níveis: resposta legal, com orçamento de 100 ms no teste.
+  Esse teste não recalibra a força nem mede o tempo normal de cada nível.
+- 260, 390 e 1100 pixels, nos três modos, sem rolagem horizontal.
+- Instalação do cache igoon-v2 e recarregamento do jogo com rede desligada.
+- Sintaxe JavaScript dos arquivos alterados conferida pelo Node.
+
+COMO REPETIR
+Com Node, Python e uma instalação existente de Playwright disponíveis:
+1. Na pasta do site: python -m http.server 8806 --bind 127.0.0.1
+2. Em outro terminal: node testes-igoon/revisao.cjs
+Se Playwright estiver fora do projeto, configure NODE_PATH para a pasta
+node_modules correspondente. CHROME_PATH permite escolher um Chrome instalado.
+O README também descreve a execução. Os contextos do navegador são isolados.
+
+ARQUIVOS ALTERADOS
+javinhas.js, regras.js, sgf.js, index.html, licoes.js, problemas.js,
+service-worker.js, README.md, este registro e testes-igoon/revisao.cjs.
+O cache passou de igoon-v1 para igoon-v2.
+
+LIMITES E PUBLICAÇÃO
+- As correções estão na pasta local. O site publicado não foi atualizado.
+- Safari, iPhone e aparelho real continuam sem teste. Largura de tela no
+  computador não substitui verificação nesses aparelhos.
+- Os testes originais citados no registro anterior não vieram no pacote:
+  não foram repetidos os 114 testes de regras, 962 de SGF nem a comparação
+  com sgfmill. Os números anteriores eram resultados declarados pelo autor.
+- A revisão de conteúdo usou fontes primárias, mas não substitui avaliação
+  por um professor humano de japonês/Go.
+- A nova resolução dos problemas usa o solucionador do próprio projeto,
+  não uma segunda implementação independente de minimax.
+- Continuam os limites documentados: CPU sem força calibrada em kyu/dan,
+  fraca em 19x19, nunca desiste; seki japonês marcado à mão; pedras externas
+  dos problemas consideradas seguras; repetição e retomada simplificadas.
+- As revisões e os testes não constituem garantia de ausência total de erros.

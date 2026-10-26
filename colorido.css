@@ -1,0 +1,585 @@
+/* ==========================================================================
+   IgoON! - colorido.css  (só o que é do jogo)
+   Header, menu, modais, rodapé, botões e scrollbar vêm de on.css.
+
+   Índice
+   1. Variáveis e layout
+   2. Tabuleiro (SVG), pedras e marcações
+   3. Barras dos jogadores
+   4. Seletor de modo e configuração
+   5. Botões, mensagens, marcação, placar e revisão
+   6. Lista de lances
+   7. Lições e problemas
+   8. "Como Jogar": abas, seções, diagramas e furigana
+   9. Modo escuro
+   10. Responsividade
+   ========================================================================== */
+
+/* ==========================================================================
+   1. Variáveis e layout
+   ========================================================================== */
+:root {
+    --madeira: #e2b865;
+    --madeira-borda: #b98a3a;
+    --linha: #3d2a0c;
+    --destaque: #fbc02d;
+    --tab-max: 560px;
+}
+
+html[data-tema="escuro"] {
+    --madeira: #b58a3d;
+    --madeira-borda: #7d5c22;
+    --linha: #24180a;
+}
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px 6px 4px;
+}
+
+#game-area {
+    width: 100%;
+    max-width: 980px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#coluna-tabuleiro,
+#coluna-controles {
+    width: 100%;
+    max-width: var(--tab-max);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+#coluna-controles { gap: 10px; }
+
+.painel-modo { display: flex; flex-direction: column; gap: 10px; }
+.painel-modo[hidden] { display: none; }
+
+/* ==========================================================================
+   2. Tabuleiro (SVG), pedras e marcações
+   ========================================================================== */
+#board-stage { position: relative; width: 100%; }
+
+#board-wrap {
+    padding: 6px;
+    border-radius: 14px;
+    background: rgba(6, 47, 81, 0.75);
+    border: 3px solid rgba(144, 202, 249, 0.5);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.32);
+}
+
+#goban {
+    width: 100%;
+    aspect-ratio: 1;
+    max-height: 78vh;
+    margin-inline: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+#goban:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 3px; }
+
+.gb-svg { display: block; width: 100%; height: 100%; }
+.gb-fundo { fill: var(--madeira); stroke: var(--madeira-borda); stroke-width: 0.06; }
+.gb-l { stroke: var(--linha); stroke-width: 0.05; stroke-linecap: square; }
+.gb-borda { stroke-width: 0.1; }
+.gb-corte { stroke: var(--linha); stroke-width: 0.05; stroke-dasharray: 0.12 0.16; opacity: 0.7; }
+.gb-estrela { fill: var(--linha); }
+.gb-coord { font-size: 0.38px; font-weight: 800; fill: var(--linha); opacity: 0.8; font-family: system-ui, sans-serif; pointer-events: none; }
+
+.gb-sombra { fill: rgba(0, 0, 0, 0.28); }
+.gb-pedra.preta .gb-corpo { fill: #17191c; }
+.gb-pedra.preta .gb-brilho { fill: rgba(255, 255, 255, 0.16); }
+.gb-pedra.branca .gb-corpo { fill: #f6f2ea; stroke: #7e776b; stroke-width: 0.035; }
+.gb-pedra.branca .gb-brilho { fill: rgba(255, 255, 255, 0.85); }
+.gb-pedra.morta { opacity: 0.55; }
+.gb-pedra.fantasma { opacity: 0.55; pointer-events: none; }
+.gb-pedra.fantasma .gb-sombra { display: none; }
+.gb-svg .gb-pedra { pointer-events: none; }
+
+.gb-ult { fill: none; stroke-width: 0.07; }
+.gb-ult.sobre-preta { stroke: #f6f2ea; }
+.gb-ult.sobre-branca { stroke: #17191c; }
+.gb-ko { fill: none; stroke: #e53935; stroke-width: 0.08; }
+.gb-dica { fill: rgba(251, 192, 45, 0.28); stroke: #fbc02d; stroke-width: 0.09; }
+.gb-lib { fill: #fbc02d; stroke: #8a5a00; stroke-width: 0.03; }
+.gb-alvo { fill: none; stroke: #e53935; stroke-width: 0.07; stroke-dasharray: 0.1 0.08; }
+.gb-certo { fill: rgba(67, 160, 71, 0.3); stroke: #43a047; stroke-width: 0.09; }
+.gb-erro { stroke: #e53935; stroke-width: 0.12; stroke-linecap: round; fill: none; }
+.gb-area { fill: rgba(255, 255, 255, 0.16); }
+.gb-alvo-pedra { fill: none; stroke: #fbc02d; stroke-width: 0.08; }
+.gb-xis { fill: none; stroke-width: 0.09; stroke-linecap: round; }
+.gb-xis.sobre-preta { stroke: #ff8a80; }
+.gb-xis.sobre-branca { stroke: #d32f2f; }
+.gb-num { font-size: 0.5px; font-weight: 800; font-family: system-ui, sans-serif; }
+.gb-num.sobre-preta { fill: #f6f2ea; }
+.gb-num.sobre-branca { fill: #17191c; }
+.gb-t.tp { fill: #17191c; }
+.gb-t.tb { fill: #f6f2ea; stroke: #7e776b; stroke-width: 0.03; }
+.gb-neutro { fill: none; stroke: #5d6d7e; stroke-width: 0.06; stroke-dasharray: 0.07 0.07; }
+.gb-cursor { fill: none; stroke: #1976d2; stroke-width: 0.09; }
+
+/* ==========================================================================
+   3. Barras dos jogadores
+   ========================================================================== */
+.jogador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 34px;
+    padding: 4px 12px;
+    border-radius: 10px;
+    background: rgba(6, 47, 81, 0.55);
+    border: 2px solid rgba(144, 202, 249, 0.28);
+    font-weight: 700;
+    font-size: 0.92rem;
+    transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+.jogador.vez {
+    border-color: rgba(251, 192, 45, 0.85);
+    background: rgba(251, 192, 45, 0.1);
+}
+
+.jog-nome { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; min-width: 0; flex: 0 1 auto; }
+.jog-nome span:last-child { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.jog-nome .ficha { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #12365f; flex-shrink: 0; }
+.ficha.w { background: #f6f2ea; }
+.ficha.b { background: #17191c; border-color: #dbe9ff; }
+.jog-capt { flex: 1 0 auto; text-align: right; white-space: nowrap; font-size: 0.8rem; font-weight: 600; opacity: 0.9; }
+.jog-vant { color: var(--semi-correct); min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   4. Seletor de modo e configuração
+   ========================================================================== */
+.seg.modos { width: 100%; max-width: var(--tab-max); flex: none; }
+.modos .seg-btn { font-size: 0.9rem; }
+
+#config {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px solid rgba(144, 202, 249, 0.3);
+    background: rgba(6, 47, 81, 0.45);
+}
+
+.linha-cfg { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.rotulo-cfg {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(144, 202, 249, 0.9);
+    flex-shrink: 0;
+}
+
+.seg { display: flex; gap: 6px; flex: 1; max-width: 300px; }
+
+.seg-btn,
+.tool-btn,
+.passo-btn {
+    flex: 1;
+    background: rgba(227, 242, 253, 0.1);
+    border: 2px solid rgba(144, 202, 249, 0.5);
+    color: var(--light-blue);
+    padding: 6px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    min-height: 40px;
+}
+
+.seg-btn:active:not(:disabled),
+.tool-btn:active:not(:disabled),
+.passo-btn:active:not(:disabled) { background: rgba(227, 242, 253, 0.2); transform: scale(0.96); }
+
+.seg-btn[aria-pressed="true"] { background: #1976d2; border-color: rgba(144, 202, 249, 0.9); color: #fff; }
+.seg-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+.seg-btn[aria-pressed="true"]:disabled { opacity: 0.85; }
+
+.passo { display: flex; align-items: center; gap: 6px; flex: 1; max-width: 300px; justify-content: flex-end; }
+.passo output { min-width: 4.2ch; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; }
+.passo-btn { flex: 0 0 44px; font-size: 1.2rem; padding: 0; }
+.passo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* menu de nível (acordeão) */
+#acc-nivel { margin-top: 0; }
+#nivel-btn { padding: 10px 14px; gap: 10px; }
+.nivel-rotulo { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(144, 202, 249, 0.9); display: block; }
+#nivel-btn .opc-txt { margin-right: auto; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; flex: 1; }
+#nivel-atual { color: #fff; font-size: 1.02rem; line-height: 1.2; display: block; text-align: left; }
+#nivel-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+#nivel-lista { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 2px; }
+
+.nivel-op {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.35);
+    background: rgba(227, 242, 253, 0.06);
+    color: var(--light-blue);
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+}
+.nivel-op b { display: block; font-size: 0.98rem; }
+.nivel-op small { display: block; font-size: 0.74rem; font-weight: 500; opacity: 0.85; }
+.nivel-op .txt { flex: 1; min-width: 0; }
+.nivel-op .barras-forca { display: inline-flex; gap: 2px; align-items: flex-end; height: 18px; }
+.nivel-op .barras-forca i { width: 4px; background: rgba(144, 202, 249, 0.3); border-radius: 1px; }
+.nivel-op .barras-forca i:nth-child(1) { height: 6px; } .nivel-op .barras-forca i:nth-child(2) { height: 9px; }
+.nivel-op .barras-forca i:nth-child(3) { height: 12px; } .nivel-op .barras-forca i:nth-child(4) { height: 15px; }
+.nivel-op .barras-forca i:nth-child(5) { height: 18px; }
+.nivel-op .barras-forca i.on { background: var(--semi-correct); }
+.nivel-op[aria-checked="true"] { background: #1976d2; border-color: rgba(144, 202, 249, 0.9); color: #fff; }
+.nivel-op:active { background: rgba(227, 242, 253, 0.14); }
+
+#trava-aviso {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(251, 192, 45, 0.95);
+}
+#trava-aviso:empty { display: none; }
+#trava-aviso svg { flex-shrink: 0; }
+#config.travado .seg-btn:disabled,
+#config.travado #nivel-btn:disabled { opacity: 0.5; }
+#config.travado .passo-btn { opacity: 0.4; }
+#bloco-cpu { display: flex; flex-direction: column; gap: 8px; }
+#bloco-cpu[hidden] { display: none; }
+
+/* ==========================================================================
+   5. Botões, mensagens, marcação, placar e revisão
+   ========================================================================== */
+.toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+.toolbar .tool-btn { flex: 1 1 28%; }
+.toolbar[hidden], .toolbar .tool-btn[hidden] { display: none; }
+.tool-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.tool-forte { background: #1976d2; border-color: rgba(144, 202, 249, 0.9); color: #fff; }
+
+#message-container { width: 100%; }
+#message-area {
+    min-height: 1.4em;
+    font-weight: 700;
+    text-align: center;
+    color: var(--light-blue);
+    padding: 10px 14px;
+    border-radius: 12px;
+    transition: background 0.4s var(--ease), color 0.4s var(--ease);
+    width: 100%;
+    border: 2px solid transparent;
+}
+#message-area:empty { padding-block: 0; min-height: 0; border-width: 0; }
+#message-area.victory { background: var(--correct); color: #fff; animation: celebrate 0.6s var(--ease); border-color: var(--correct-dark); }
+#message-area.defeat { background: var(--wrong); color: #eceff1; animation: slideUp 0.5s var(--ease); border-color: var(--wrong-dark); }
+#message-area.draw { background: rgba(251, 192, 45, 0.2); border-color: rgba(251, 192, 45, 0.7); color: #fff8e1; animation: slideUp 0.4s var(--ease); }
+#message-area.hint { background: rgba(251, 192, 45, 0.16); border-color: rgba(251, 192, 45, 0.6); color: #fff8e1; font-weight: 600; animation: slideUp 0.35s var(--ease); }
+#message-area.error { background: rgba(255, 180, 180, 0.1); color: #ffb4b4; border-color: rgba(255, 180, 180, 0.4); animation: shake 0.5s ease-in-out; }
+#message-area.ok { background: rgba(67, 160, 71, 0.2); border-color: rgba(67, 160, 71, 0.7); color: #e8f5e9; animation: slideUp 0.35s var(--ease); }
+#message-area.pensando::after {
+    content: "";
+    display: inline-block;
+    width: 0.9em; height: 0.9em;
+    margin-left: 8px;
+    vertical-align: -0.1em;
+    border: 3px solid rgba(144, 202, 249, 0.35);
+    border-top-color: var(--accent-blue);
+    border-radius: 50%;
+    animation: gira 0.8s linear infinite;
+}
+@keyframes gira { to { transform: rotate(360deg); } }
+
+#restart-btn { width: 100%; }
+
+#marcacao, #revisao, #placar {
+    border: 2px solid rgba(144, 202, 249, 0.3);
+    border-radius: 12px;
+    background: rgba(6, 47, 81, 0.45);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+#marcacao[hidden], #revisao[hidden], #placar[hidden] { display: none; }
+#marcacao p { font-size: 0.86rem; font-weight: 600; line-height: 1.4; }
+
+.rev-linha { display: flex; gap: 6px; align-items: center; }
+.rev-linha .tool-btn { flex: 1 1 0; min-width: 0; }
+.rev-pos { flex: 2 1 0; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+
+#placar h3 { font-size: 1rem; text-align: center; }
+.placar-tab { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 12px; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.placar-tab .cab { font-weight: 800; color: rgba(144, 202, 249, 0.95); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.placar-tab .num { text-align: right; }
+.placar-tab .tot { font-weight: 800; border-top: 1px solid rgba(144, 202, 249, 0.3); padding-top: 4px; }
+.placar-nota { font-size: 0.76rem; opacity: 0.85; line-height: 1.4; }
+
+/* ==========================================================================
+   6. Lista de lances
+   ========================================================================== */
+#lances-caixa {
+    border: 2px solid rgba(144, 202, 249, 0.28);
+    border-radius: 12px;
+    background: rgba(6, 47, 81, 0.45);
+    overflow: hidden;
+}
+.lances-topo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(144, 202, 249, 0.9);
+    border-bottom: 1px solid rgba(144, 202, 249, 0.2);
+}
+#lances-info { text-transform: none; letter-spacing: 0; font-weight: 600; }
+#lances {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 2.4em 1fr 1fr;
+    max-height: 132px;
+    overflow-y: auto;
+    padding: 4px 8px;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+}
+#lances:empty::before { content: "Os lances aparecem aqui."; grid-column: 1 / -1; padding: 6px 4px; font-weight: 500; color: #a7c7f7; }
+#lances li { display: contents; }
+#lances .num { color: rgba(144, 202, 249, 0.7); padding: 3px 0; }
+#lances .lance { padding: 3px 6px; border-radius: 6px; font-weight: 700; cursor: pointer; background: none; border: 0; color: inherit; text-align: left; font: inherit; font-weight: 700; }
+#lances .lance.ultimo { background: rgba(251, 192, 45, 0.25); }
+#lances .lance:focus-visible { outline: 2px solid var(--accent-blue); }
+
+/* ==========================================================================
+   7. Lições e problemas
+   ========================================================================== */
+.lista-cartoes { display: flex; flex-direction: column; gap: 8px; }
+.cartao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 2px solid rgba(144, 202, 249, 0.35);
+    background: rgba(227, 242, 253, 0.07);
+    color: var(--light-blue);
+    text-align: left;
+    cursor: pointer;
+}
+.cartao:active { background: rgba(227, 242, 253, 0.16); }
+.cartao .num { flex: 0 0 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #1976d2; color: #fff; font-weight: 800; font-size: 0.85rem; }
+.cartao.feito .num { background: var(--correct); }
+.cartao .txt { flex: 1; min-width: 0; }
+.cartao b { display: block; font-size: 0.98rem; }
+.cartao small { display: block; font-size: 0.76rem; opacity: 0.85; font-weight: 500; }
+.cartao .marca { font-size: 1.1rem; }
+
+.grupo-prob h3 { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(144, 202, 249, 0.95); margin: 6px 0 2px; }
+.grupo-prob p { font-size: 0.8rem; opacity: 0.85; margin-bottom: 6px; }
+.grade-prob { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
+.grade-prob button {
+    min-height: 42px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.45);
+    background: rgba(227, 242, 253, 0.08);
+    color: var(--light-blue);
+    font-weight: 800;
+    cursor: pointer;
+    position: relative;
+}
+.grade-prob button.feito { background: var(--correct); border-color: var(--correct-dark); color: #fff; }
+.grade-prob button.visto { border-style: dashed; }
+
+.lic-topo { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+.lic-topo .tool-btn { flex: 0 0 auto; padding-inline: 10px; min-height: 36px; }
+.lic-topo #lic-titulo, .lic-topo #prob-titulo { flex: 1; min-width: 0; font-size: 0.95rem; }
+.lic-topo #lic-passo, .lic-topo #prob-num { font-size: 0.8rem; opacity: 0.85; font-variant-numeric: tabular-nums; }
+.lic-texto {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 2px solid rgba(144, 202, 249, 0.3);
+    background: rgba(6, 47, 81, 0.45);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+.lic-texto ruby rt { font-size: 0.5em; }
+.lic-opcoes { display: flex; flex-direction: column; gap: 6px; }
+.lic-opcoes[hidden] { display: none; }
+.lic-opcoes button {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.45);
+    background: rgba(227, 242, 253, 0.08);
+    color: var(--light-blue);
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+.lic-opcoes button.certa { background: var(--correct); border-color: var(--correct-dark); color: #fff; }
+.lic-opcoes button.errada { opacity: 0.55; border-color: rgba(255, 180, 180, 0.6); }
+.lic-opcoes button:disabled { cursor: default; }
+
+/* ==========================================================================
+   8. "Como Jogar": abas, seções, diagramas e furigana
+   ========================================================================== */
+.abas { display: flex; gap: 6px; padding: 10px 24px 0; border-bottom: 1px solid var(--modal-line); }
+.aba {
+    flex: 1;
+    padding: 9px 6px;
+    border: 2px solid var(--modal-line);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    background: transparent;
+    color: var(--modal-sub);
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+.aba[aria-selected="true"] { background: #1976d2; border-color: #1976d2; color: #fff; }
+.aba:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 2px; }
+.modal-body[hidden] { display: none; }
+.intro-ajuda { font-weight: 600; }
+
+.modal-body details {
+    border: 1px solid var(--modal-line);
+    border-radius: 10px;
+    padding: 0 12px;
+    background: rgba(13, 60, 117, 0.04);
+}
+.modal-body details + details { margin-top: 8px; }
+.modal-body summary {
+    cursor: pointer;
+    padding: 11px 0;
+    font-weight: 800;
+    color: var(--modal-title);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+.modal-body summary::-webkit-details-marker { display: none; }
+.modal-body summary::after { content: "+"; font-size: 1.3rem; line-height: 1; }
+.modal-body details[open] summary::after { content: "\2212"; }
+.modal-body details[open] { padding-bottom: 12px; }
+.modal-body details > * + * { margin-top: 10px; }
+.modal-body summary:focus-visible { outline: 3px solid var(--accent-blue); outline-offset: 2px; border-radius: 6px; }
+.modal-body h4 { font-size: 0.95rem; color: var(--modal-title); margin-top: 14px; }
+.modal-body ruby { ruby-position: over; }
+.modal-body ruby rt { font-size: 0.55em; font-weight: 600; }
+.modal-body kbd { font: inherit; font-weight: 800; padding: 0 5px; border: 1px solid var(--modal-line); border-radius: 5px; background: rgba(13, 60, 117, 0.08); }
+.modal-body [lang="zh"], .modal-body [lang="ko"] { font-style: normal; }
+
+.pecas-aula { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+.aula { display: flex; align-items: center; gap: 12px; }
+.aula p { flex: 1; font-size: 0.9rem; line-height: 1.45; }
+.aula.solo { padding: 4px 0; }
+
+.mini-go {
+    flex: 0 0 auto;
+    width: 132px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--modal-line);
+    line-height: 0;
+}
+.mini-go .gb-svg { width: 100%; height: auto; }
+
+.tabela-termos { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--modal-line); border-radius: 10px; overflow: hidden; }
+.tt-cab, .tt-lin { display: grid; grid-template-columns: 1.1fr 1fr 1.6fr; gap: 8px; padding: 8px 10px; align-items: center; }
+.tt-cab { background: #1976d2; color: #fff; font-weight: 800; font-size: 0.8rem; }
+.tt-lin { border-top: 1px solid var(--modal-line); font-size: 0.86rem; line-height: 1.5; }
+.tt-lin:nth-child(even) { background: rgba(13, 60, 117, 0.05); }
+.tt-lin .jp { font-size: 1.05rem; font-weight: 700; }
+.tt-lin .ro { font-style: italic; }
+.tt-grupo { padding: 6px 10px; font-weight: 800; font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--modal-title); background: rgba(25, 118, 210, 0.12); border-top: 1px solid var(--modal-line); }
+
+/* ==========================================================================
+   9. Modo escuro
+   ========================================================================== */
+html[data-tema="escuro"] #board-wrap,
+html[data-tema="escuro"] #config,
+html[data-tema="escuro"] #lances-caixa,
+html[data-tema="escuro"] .jogador,
+html[data-tema="escuro"] .lic-texto,
+html[data-tema="escuro"] #marcacao,
+html[data-tema="escuro"] #revisao,
+html[data-tema="escuro"] #placar { background: rgba(3, 12, 24, 0.7); }
+html[data-tema="escuro"] .modal-body details { background: rgba(144, 202, 249, 0.05); }
+html[data-tema="escuro"] .tt-lin:nth-child(even) { background: rgba(144, 202, 249, 0.06); }
+
+/* ==========================================================================
+   10. Responsividade
+   ========================================================================== */
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+@keyframes celebrate { 0% { transform: scale(0.9) rotate(-2deg); opacity: 0; } 50% { transform: scale(1.02) rotate(2deg); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes slideUp { 0% { transform: translateY(14px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+
+html[data-reduzir] * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+
+@media (min-width: 768px) {
+    main { padding-top: 14px; }
+    .seg-btn:hover:not(:disabled), .tool-btn:hover:not(:disabled), .passo-btn:hover:not(:disabled) { background: rgba(227, 242, 253, 0.18); border-color: rgba(144, 202, 249, 0.8); }
+    .seg-btn[aria-pressed="true"]:hover:not(:disabled), .tool-forte:hover:not(:disabled) { background: #1976d2; }
+    .nivel-op:hover, .cartao:hover, .lic-opcoes button:hover:not(:disabled), .grade-prob button:hover { background: rgba(227, 242, 253, 0.14); border-color: rgba(144, 202, 249, 0.7); }
+    .nivel-op[aria-checked="true"]:hover { background: #1976d2; }
+}
+
+@media (min-width: 900px) {
+    #game-area { flex-direction: row; align-items: flex-start; justify-content: center; gap: 26px; --tab-max: clamp(300px, calc(100vh - var(--header-height) - 190px), 560px); }
+    #coluna-tabuleiro { flex: 0 1 var(--tab-max); position: sticky; top: calc(var(--header-height) + 12px); }
+    #coluna-controles { flex: 0 0 380px; max-width: 380px; }
+    #lances { max-height: 200px; }
+}
+
+@media (max-width: 520px) {
+    .seg-btn { font-size: 0.78rem; padding: 6px 4px; }
+    .tool-btn { font-size: 0.8rem; padding: 6px 4px; }
+    #board-wrap { padding: 4px; border-width: 2px; }
+    .rotulo-cfg { font-size: 0.7rem; }
+    .abas { padding-inline: 12px; }
+    .aba { font-size: 0.8rem; }
+    .aula { flex-direction: column; align-items: center; text-align: center; }
+    .mini-go { width: 160px; }
+    .tt-cab, .tt-lin { grid-template-columns: 1.2fr 1fr 1.5fr; gap: 6px; padding-inline: 8px; }
+}
+
+@media (max-width: 380px) {
+    .nivel-op small { display: none; }
+    .jog-nome { font-size: 0.82rem; }
+    .linha-cfg { flex-wrap: wrap; }
+    .seg, .passo { max-width: none; }
+    .toolbar .tool-btn { flex-basis: 30%; font-size: 0.74rem; }
+}

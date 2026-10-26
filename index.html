@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>IgoON!</title>
+  <meta name="description" content="IgoON!: Go (囲碁) grátis no navegador. Jogue contra o computador em 5 níveis ou com um amigo, aprenda com lições no tabuleiro, resolva problemas de vida e morte e abra partidas em SGF. Funciona offline." />
+  <meta name="theme-color" content="#007ACC" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="assets/favicon.ico" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+  <script>/* aplica tema e animações antes de pintar (evita "piscar") */
+  try{var c={};try{c=JSON.parse(localStorage.getItem('igoon.cfg')||'{}')||{}}catch(e){}var d=document.documentElement,r=c.reduzir,t=c.tema;
+  if(t!=='escuro'&&t!=='claro')t=c.escuro===true?'escuro':null;
+  if(r===undefined||r===null)r=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(t?t==='escuro':matchMedia('(prefers-color-scheme: dark)').matches)d.setAttribute('data-tema','escuro');if(r)d.setAttribute('data-reduzir','1')}catch(e){}</script>
+  <link rel="stylesheet" href="on.css" />
+  <link rel="stylesheet" href="colorido.css" />
+  <script defer src="on.js"></script>
+  <script defer src="regras.js"></script>
+  <script defer src="sgf.js"></script>
+  <script defer src="goban.js"></script>
+  <script defer src="licoes.js"></script>
+  <script defer src="problemas.js"></script>
+  <script defer src="javinhas.js"></script>
+  <script defer src="estudo.js"></script>
+</head>
+<body>
+  <header>
+    <button id="menu-btn" type="button" aria-label="Abrir menu" aria-controls="drawer" data-abrir="drawer">☰</button>
+    <h1>IgoON!</h1>
+    <button id="howto-btn" class="header-btn" type="button" aria-haspopup="dialog" data-abrir="howto-modal">Como Jogar</button>
+  </header>
+
+  <div id="overlay" hidden></div>
+
+  <!-- Modal "Como Jogar": três abas (usar o site, aprender Go, termos em japonês) -->
+  <div id="howto-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+    <div class="modal-content">
+      <div class="modal-head">
+        <h2 id="howto-title">Como Jogar IgoON!</h2>
+        <button class="modal-x" type="button" aria-label="Fechar" data-fechar>✕</button>
+      </div>
+      <div class="abas" role="tablist" aria-label="Seções da ajuda">
+        <button class="aba" id="aba-usar" type="button" role="tab" aria-selected="true" aria-controls="painel-usar">Usar o site</button>
+        <button class="aba" id="aba-go" type="button" role="tab" aria-selected="false" aria-controls="painel-go" tabindex="-1">Aprender Go</button>
+        <button class="aba" id="aba-termos" type="button" role="tab" aria-selected="false" aria-controls="painel-termos" tabindex="-1">Termos</button>
+      </div>
+
+      <!-- ===================== ABA 1: USAR O SITE ===================== -->
+      <div class="modal-body" id="painel-usar" role="tabpanel" aria-labelledby="aba-usar">
+        <p class="intro-ajuda">O IgoON! tem três modos, que ficam no seletor logo abaixo do topo: <strong>Jogar</strong>, <strong>Lições</strong> e <strong>Problemas</strong>. Este guia explica cada botão. Se você nunca jogou Go, comece pela aba <strong>Aprender Go</strong> e pelo modo Lições.</p>
+
+        <details open>
+          <summary>1. Começar uma partida</summary>
+          <ol>
+            <li>No modo <strong>Jogar</strong>, escolha contra quem jogar: o <strong>Computador</strong> ou um <strong>Amigo</strong>. Com o amigo, os dois se revezam no mesmo aparelho.</li>
+            <li>Contra o computador, escolha o <strong>Nível</strong> (de 1 a 5) e a <strong>sua cor</strong>: Preto, Branco ou Sorteio. O Preto joga primeiro.</li>
+            <li>Escolha o <strong>Tabuleiro</strong>: 9×9 (partidas rápidas, ideal para aprender), 13×13 (médio) ou 19×19 (o tabuleiro oficial).</li>
+            <li>Escolha as <strong>Regras</strong>: Japonesa ou Chinesa. A diferença está na contagem e em alguns detalhes, explicados na aba Aprender Go.</li>
+            <li>Ajuste o <strong>Handicap</strong> (pedras de vantagem) e o <strong>Komi</strong> (pontos de compensação) se quiser. Os valores padrão já são os usados em partidas oficiais.</li>
+            <li>Faça o primeiro lance. Se quem começa é o computador (você de Branco, ou você de Preto com handicap, porque nesse caso o Branco joga primeiro), toque em Iniciar partida para ele jogar.</li>
+          </ol>
+          <div class="dica">Depois do primeiro lance, o oponente, o nível, a cor, o tamanho, as regras, o handicap e o komi ficam <strong>travados</strong> (aparece um cadeado), para ninguém mudar o jogo no meio da partida. Para trocar, comece um <strong>Novo jogo</strong>.</div>
+        </details>
+
+        <details>
+          <summary>2. Como jogar uma pedra</summary>
+          <ul>
+            <li><strong>Tocando ou clicando</strong> numa interseção vazia (o cruzamento de duas linhas), você joga ali.</li>
+            <li><strong>Confirmar lance (dois toques)</strong>: em telas pequenas, os pontos ficam bem próximos e é fácil tocar no lugar errado. Com essa opção ligada, o primeiro toque mostra uma pedra transparente no ponto escolhido, e você toca no mesmo ponto de novo para confirmar. Para mudar de ideia, toque em outro ponto. A opção vem ligada sozinha em telas apertadas e dá para trocar nas opções da partida, abaixo do tabuleiro (modo Jogar).</li>
+            <li><strong>Pelo teclado</strong>: as setas movem o cursor no tabuleiro, <kbd>Enter</kbd> ou <kbd>Espaço</kbd> joga, <kbd>P</kbd> passa e <kbd>U</kbd> desfaz.</li>
+            <li>O jogo só aceita lances legais. Se você tocar num ponto proibido (ocupado, suicídio ou ko), uma mensagem explica o motivo.</li>
+            <li>O último lance fica marcado com um anel, e o ponto proibido pelo ko aparece com um quadradinho.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>3. Os botões da partida</summary>
+          <ul>
+            <li><strong>Passar</strong>: você não joga neste turno. Quando os dois jogadores passam seguidamente, a partida termina e começa a contagem.</li>
+            <li><strong>Desfazer</strong>: volta o seu último lance. Contra o computador, volta o dele também. Partidas em que você usou Desfazer, Dica, Território ou Continuar daqui não entram nas estatísticas.</li>
+            <li><strong>Dica</strong>: o computador mostra um bom lance para você, marcado com um círculo dourado.</li>
+            <li><strong>Território</strong>: mostra uma estimativa de quem está na frente e de quais pontos pertencem a cada lado. É só uma estimativa, feita por simulação, e pode errar em posições abertas.</li>
+            <li><strong>Desistir</strong>: encerra a partida e dá a vitória ao outro lado, depois de uma confirmação. Em japonês, é <ruby>投了<rt>とうりょう</rt></ruby> (tōryō).</li>
+            <li><strong>Novo jogo</strong>: começa outra partida. Se há uma em andamento, o jogo pergunta antes. Largar uma partida contra o computador conta como derrota.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>4. Os níveis do computador</summary>
+          <ul>
+            <li><strong>Nível 1, Iniciante</strong>: joga pedras quase ao acaso, só captura quando vê e às vezes salva uma pedra em atari. Passa assim que você passa.</li>
+            <li><strong>Nível 2, Aprendiz</strong>: já planeja um pouco, mas cai em armadilhas simples.</li>
+            <li><strong>Nível 3, Intermediário</strong>: entende bem capturas e fugas.</li>
+            <li><strong>Nível 4, Forte</strong>: simula muito mais partidas em cada lance e erra bem menos.</li>
+            <li><strong>Nível 5, Mestre</strong>: o mais forte que o IgoON! consegue ser, pensando por até 15 segundos em cada lance.</li>
+          </ul>
+          <p>O computador funciona assim: a cada lance, ele joga milhares de partidas rápidas de "mentirinha" a partir da posição atual e escolhe o lance que mais venceu. Quanto maior o nível, mais partidas ele simula. Tudo roda no seu aparelho, sem internet.</p>
+          <div class="dica"><strong>Seja realista:</strong> a força dos níveis não está calibrada em graus oficiais (kyu e dan). Em 9×9 o computador é um adversário bom para quem está aprendendo. Em 19×19 ele fica bem mais fraco, porque o tabuleiro é grande demais para tantas simulações. Em celulares mais lentos, os níveis altos demoram mais, e o computador nunca desiste da partida: se estiver perdendo, ele continua jogando até você terminar.</div>
+        </details>
+
+        <details>
+          <summary>5. Fim da partida e contagem</summary>
+          <p>Quando os dois jogadores passam seguidamente, os lances param e começa a <strong>marcação</strong>:</p>
+          <ol>
+            <li>Toque em cada grupo de pedras que está <strong>morto</strong>, isto é, que não teria como se salvar se a partida continuasse. O grupo inteiro fica marcado com um X.</li>
+            <li>O botão <strong>Sugerir</strong> pede ao computador uma proposta de quais grupos estão mortos. Confira sempre: é uma sugestão, não uma sentença. Contra o computador, essa sugestão já vem aplicada quando a marcação começa.</li>
+            <li>Nas regras <strong>japonesas</strong>, regiões vazias que não pertencem a ninguém (como as que ficam no <em>seki</em>) devem ser marcadas como neutras: toque no ponto vazio da região para marcar ou desmarcar.</li>
+            <li>O botão <strong>Contar</strong> mostra o placar com todos os detalhes: território, prisioneiros ou pedras, komi e o vencedor.</li>
+            <li>Se vocês discordam sobre alguma pedra, use <strong>Continuar jogando</strong>. A partida volta a ser jogada, e quem decide é o tabuleiro.</li>
+          </ol>
+          <p>Contra o computador, quando você passa, o nível 1 sempre passa também, e os outros níveis passam quando acham que não há mais nada de bom para jogar. Se ele ainda vir um lance bom, ele joga e a partida continua. Quando os dois passam, você marca as pedras mortas.</p>
+        </details>
+
+        <details>
+          <summary>6. Salvar, abrir e revisar partidas (SGF)</summary>
+          <p>O SGF (<em>Smart Game Format</em>) é o formato padrão das partidas de Go, aceito por praticamente todos os programas e sites.</p>
+          <ul>
+            <li><strong>Salvar SGF</strong> baixa um arquivo com a partida atual: tamanho, regras, komi, handicap, lances, nomes e resultado.</li>
+            <li><strong>Abrir SGF</strong> carrega uma partida de um arquivo. O jogo confere cada lance com as regras escolhidas e avisa se algum for ilegal. Se o arquivo tiver variações, só a linha principal é aberta.</li>
+            <li>Com uma partida aberta ou terminada, o modo <strong>Revisar</strong> deixa você andar lance a lance: ⏮ vai ao começo, ◀ volta um lance, ▶ avança, ⏭ vai ao fim. Também dá para tocar em qualquer lance da lista.</li>
+            <li>Na revisão você pode <strong>Continuar daqui</strong>: a partida volta a ser jogada a partir do lance que você está vendo, e os lances seguintes são descartados.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>7. Lições no tabuleiro</summary>
+          <p>O modo <strong>Lições</strong> tem 11 lições curtas, em ordem: colocar pedras, liberdades, capturar, fugir do atari, jogadas proibidas, ko, dois olhos, contar pontos, pedras mortas, komi e handicap, e seki. Em cada passo, você faz a jogada ou responde a uma pergunta direto no tabuleiro, e o jogo explica o acerto e o erro. As lições concluídas ficam marcadas.</p>
+        </details>
+
+        <details>
+          <summary>8. Problemas de vida e morte (tsume-go)</summary>
+          <p>Em <ruby>詰碁<rt>つめご</rt></ruby> (tsumego), o <strong>objetivo</strong> é indicado no alto: matar um grupo ou fazer um grupo viver. Só a área do problema é mostrada, e as pedras de fora estão seguras.</p>
+          <ul>
+            <li>Toque no ponto que resolve. Se acertar, o oponente responde com a melhor defesa, e você continua até o resultado ficar decidido.</li>
+            <li>Se errar, o jogo mostra a resposta do oponente que refuta o seu lance e explica o que aconteceu.</li>
+            <li><strong>Dica</strong> mostra uma pista, <strong>Ver solução</strong> mostra a sequência certa, e <strong>Reiniciar</strong> volta ao começo.</li>
+            <li>Os 24 problemas vão do fácil (espaços de 3 pontos) ao difícil (espaços de 6 pontos), e cada um foi conferido por busca completa, testando todas as respostas dos dois lados.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>9. Estatísticas, partida salva e configurações</summary>
+          <p>A partida é salva a cada lance, então dá para fechar a aba e continuar depois. No menu ☰ ficam as suas vitórias e derrotas por nível, as partidas com amigo, as lições concluídas e os problemas resolvidos. Tudo fica guardado apenas no seu aparelho.</p>
+          <p>O menu ☰ também tem som, vibração, tremor da tela, modo escuro e reduzir animações. Mostrar coordenadas e confirmar lance ficam nas opções da partida. Quando o navegador permite, o botão Instalar app coloca o IgoON! na tela inicial, e ele funciona sem internet.</p>
+        </details>
+      </div>
+
+      <!-- ===================== ABA 2: APRENDER GO ===================== -->
+      <div class="modal-body" id="painel-go" role="tabpanel" aria-labelledby="aba-go" hidden>
+        <p class="intro-ajuda">Um curso completo, do zero até a contagem final. Toque em cada título para abrir. Os termos em japonês aparecem com a leitura em <em>furigana</em> (o texto pequeno em cima do kanji) e em romaji. A aba <strong>Termos</strong> reúne todos. Para treinar cada ideia no tabuleiro, use o modo <strong>Lições</strong>.</p>
+
+        <details open>
+          <summary>1. O que é o Go e qual é o objetivo</summary>
+          <p>O Go, chamado de <ruby>囲碁<rt>いご</rt></ruby> (igo) no Japão, <i lang="zh">围棋</i> (wéiqí) na China e <i lang="ko">바둑</i> (baduk) na Coreia, é um jogo de tabuleiro para dois jogadores. Nasceu na China há mais de 2.500 anos e chegou ao Japão há mais de mil anos. Tem regras muito simples e uma profundidade enorme: o Go é um dos jogos mais estudados da história.</p>
+          <p>Um jogador usa as pedras <strong>pretas</strong> (<ruby>黒<rt>くろ</rt></ruby>, kuro) e o outro as <strong>brancas</strong> (<ruby>白<rt>しろ</rt></ruby>, shiro). Eles se alternam colocando uma pedra de cada vez. O <strong>objetivo</strong> é cercar mais território do que o adversário: ao fim da partida, vence quem tiver mais pontos.</p>
+          <div class="dica">Em vez de "mover" peças, no Go você <strong>constrói</strong>. As pedras não andam depois de colocadas, e capturar é um meio para cercar território, não o fim do jogo.</div>
+        </details>
+
+        <details>
+          <summary>2. O tabuleiro e as pedras</summary>
+          <p>O tabuleiro (<ruby>碁盤<rt>ごばん</rt></ruby>, goban) é uma grade de linhas. As pedras (<ruby>碁石<rt>ごいし</rt></ruby>, goishi) são colocadas nas <strong>interseções</strong>, os cruzamentos das linhas, e não dentro dos quadrados.</p>
+          <div class="aula solo"><div class="mini-go" data-g="XX.../X.O../..O../....." data-borda="tl" data-alt="Canto de tabuleiro com pedras nas interseções"></div><p>As pedras ficam sobre os cruzamentos das linhas. As linhas grossas são a borda do tabuleiro.</p></div>
+          <ul>
+            <li><strong>19×19</strong> (<ruby>十九路盤<rt>じゅうきゅうろばん</rt></ruby>, jūkyūroban) é o tabuleiro oficial, com 361 interseções.</li>
+            <li><strong>13×13</strong> (<ruby>十三路盤<rt>じゅうさんろばん</rt></ruby>, jūsanroban) é um tamanho intermediário.</li>
+            <li><strong>9×9</strong> (<ruby>九路盤<rt>きゅうろばん</rt></ruby>, kyūroban) é o ideal para aprender: partidas de 10 a 20 minutos.</li>
+          </ul>
+          <p>Os pontinhos pretos do tabuleiro são os <strong>pontos de estrela</strong> (<ruby>星<rt>ほし</rt></ruby>, hoshi). Eles não mudam as regras. Servem de referência visual e de lugar para as pedras de handicap. O ponto central chama-se <ruby>天元<rt>てんげん</rt></ruby> (tengen).</p>
+          <p>Jogar uma pedra no tabuleiro se diz <ruby>打<rt>う</rt></ruby>つ (utsu). O Preto joga primeiro, e depois os lados se alternam. Cada jogador joga <strong>uma pedra por turno</strong> numa interseção vazia, ou passa.</p>
+        </details>
+
+        <details>
+          <summary>3. Liberdades e grupos</summary>
+          <p>As pedras vivem de liberdades. <strong>Liberdade</strong> (<ruby>呼吸点<rt>こきゅうてん</rt></ruby>, kokyūten) é uma interseção vazia colada na pedra, em cima, embaixo, à esquerda ou à direita. A diagonal <strong>não</strong> conta.</p>
+          <div class="pecas-aula">
+            <div class="aula"><div class="mini-go" data-g=".+./+X+/.+." data-alt="Pedra preta no meio com quatro liberdades"></div><p>No meio do tabuleiro, uma pedra tem <strong>4</strong> liberdades.</p></div>
+            <div class="aula"><div class="mini-go" data-g="+X+/.+." data-borda="t" data-alt="Pedra na borda com três liberdades"></div><p>Na borda, tem <strong>3</strong>.</p></div>
+            <div class="aula"><div class="mini-go" data-g="X+/+." data-borda="tl" data-alt="Pedra no canto com duas liberdades"></div><p>No canto, tem só <strong>2</strong>.</p></div>
+          </div>
+          <p>Pedras da mesma cor coladas na horizontal ou na vertical formam um <strong>grupo</strong> (ou cadeia), e o grupo inteiro divide as suas liberdades. Pedras que só se tocam na diagonal <strong>não</strong> estão ligadas.</p>
+          <div class="aula solo"><div class="mini-go" data-g=".++./+XX+/.++./...." data-alt="Duas pedras ligadas com seis liberdades"></div><p>Este grupo de duas pedras tem <strong>6</strong> liberdades.</p></div>
+          <p>Quanto mais liberdades, mais seguro o grupo. Um grupo com poucas liberdades corre perigo.</p>
+        </details>
+
+        <details>
+          <summary>4. Capturar pedras</summary>
+          <p>Quando uma pedra ou um grupo <strong>perde a última liberdade</strong> porque o adversário ocupou todas, ele é <strong>capturado</strong> (<ruby>取<rt>と</rt></ruby>る, toru): as pedras saem do tabuleiro e viram <strong>prisioneiros</strong> (<ruby>上<rt>あ</rt></ruby>げ<ruby>浜<rt>はま</rt></ruby>, agehama) de quem capturou.</p>
+          <div class="pecas-aula">
+            <div class="aula"><div class="mini-go" data-g=".X./XOX/.*." data-alt="Pedra branca com uma só liberdade"></div><p>Esta pedra branca tem uma só liberdade (o círculo). Isso é <strong>atari</strong> (<ruby>当<rt>あ</rt></ruby>たり, atari): a pedra será capturada no próximo lance.</p></div>
+            <div class="aula"><div class="mini-go" data-g=".X./X.X/.1." data-alt="Pedra branca capturada"></div><p>Preto joga na última liberdade, e a pedra branca é capturada e removida do tabuleiro.</p></div>
+          </div>
+          <p>Grupos inteiros são capturados de uma vez, e só quando perdem <strong>todas</strong> as liberdades. Dizer "atari" em voz alta ao ameaçar uma captura é costume entre jogadores, mas não é obrigatório.</p>
+          <div class="dica">A captura é resolvida <strong>antes</strong> de qualquer outra verificação. Isso explica por que, às vezes, uma jogada que parece suicida é permitida, como você verá a seguir.</div>
+        </details>
+
+        <details>
+          <summary>5. Fugir de um atari</summary>
+          <p>Se uma pedra sua está em atari, você pode salvá-la de duas formas:</p>
+          <ul>
+            <li><strong>Estender</strong>: jogar numa liberdade dela, para o grupo ganhar liberdades novas. Só adianta se, depois da extensão, o grupo tiver mais de uma liberdade.</li>
+            <li><strong>Capturar</strong> uma pedra adversária que está ameaçando o seu grupo, o que devolve liberdades a ele.</li>
+          </ul>
+          <div class="aula solo"><div class="mini-go" data-g=".O./OXO/.1." data-alt="Estender para fugir do atari"></div><p>A pedra preta estava em atari. Estender (o lance 1) a deixa com 3 liberdades, ligada a uma pedra nova.</p></div>
+          <p>Nem toda fuga funciona: se o grupo estendido continuar com uma liberdade só, o adversário o ataca de novo, e assim por diante. Antes de fugir, conte as liberdades que sobram. No Go, esse exame se chama <strong>ler</strong> a posição (prever as jogadas à frente).</p>
+        </details>
+
+        <details>
+          <summary>6. Jogadas proibidas: suicídio e ko</summary>
+          <h4>Suicídio</h4>
+          <p>Não se pode jogar uma pedra numa interseção onde ela (junto com o seu grupo) ficaria <strong>sem nenhuma liberdade</strong>, a menos que essa jogada <strong>capture</strong> pedras adversárias. A captura vem primeiro e devolve liberdades.</p>
+          <div class="pecas-aula">
+            <div class="aula"><div class="mini-go" data-g="*O./OO./..." data-borda="tl" data-alt="Jogada suicida no canto"></div><p><strong>Proibido.</strong> Preto em * ficaria sem liberdades, e as brancas têm outras liberdades.</p></div>
+            <div class="aula"><div class="mini-go" data-g="*OX/OXX/X.." data-borda="tl" data-alt="Jogada que captura no canto"></div><p><strong>Permitido.</strong> Preto em * captura as duas brancas, porque aquele era o último ponto que elas tinham.</p></div>
+          </div>
+          <h4>Ko</h4>
+          <p>O <ruby>劫<rt>こう</rt></ruby> (kō) é uma situação em que duas pedras poderiam se capturar sem fim. A regra: <strong>depois de capturar, o adversário não pode recapturar logo em seguida de modo que o tabuleiro volte ao que era antes</strong>. Ele precisa jogar em outro lugar primeiro. Uma jogada que ameaça algo tão importante que o adversário precisa responder chama-se ameaça de ko (<ruby>劫材<rt>こうざい</rt></ruby>, kōzai).</p>
+          <div class="pecas-aula">
+            <div class="aula"><div class="mini-go" data-g=".XO./X.XO/.XO." data-alt="Situação de ko depois da captura"></div><p>Preto acaba de capturar uma pedra branca no meio do ko (o ponto vazio).</p></div>
+            <div class="aula"><div class="mini-go" data-g=".XO./X*XO/.XO." data-alt="Ponto proibido pelo ko"></div><p>Branco não pode recapturar em * agora: o tabuleiro repetiria. Precisa jogar uma ameaça em outro lugar e só depois recapturar.</p></div>
+          </div>
+          <p><strong>Como o IgoON! trata a repetição:</strong></p>
+          <ul>
+            <li><strong>Regras japonesas</strong>: vale o ko simples, ou seja, um lance não pode recriar o tabuleiro de dois lances antes. Se a mesma posição, com o mesmo jogador a jogar, acontecer três vezes (algo raro, como o <ruby>三劫<rt>さんこう</rt></ruby>, sankō, o ko triplo), a partida termina <strong>sem resultado</strong> (<ruby>無勝負<rt>むしょうぶ</rt></ruby>, mushōbu) e pode ser jogada de novo.</li>
+            <li><strong>Regras chinesas</strong>: vale o <em>superko posicional</em>. Nenhum lance pode recriar um tabuleiro que já apareceu antes na partida, seja qual for o jogador. Por isso a partida sempre termina com um vencedor.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>7. Passar e terminar a partida</summary>
+          <p>Em vez de jogar, você pode <strong>passar</strong> (パス, pasu). Isso acontece quando não há mais nada de útil para jogar. Quando os <strong>dois</strong> jogadores passam em sequência, a partida termina (<ruby>終局<rt>しゅうきょく</rt></ruby>, shūkyoku).</p>
+          <p>Depois disso vêm duas etapas:</p>
+          <ol>
+            <li><strong>Marcar as pedras mortas</strong>: pedras que continuam no tabuleiro mas não têm como se salvar são retiradas na contagem, como se tivessem sido capturadas. Os jogadores precisam concordar. Se discordarem, a partida continua, e quem joga é decidido pela ordem normal dos turnos.</li>
+            <li><strong>Contar os pontos</strong> pelas regras escolhidas (as duas seções a seguir).</li>
+          </ol>
+          <p>Também é possível <strong>desistir</strong> (<ruby>投了<rt>とうりょう</rt></ruby>, tōryō) a qualquer momento: o outro lado vence. Um empate por pontos iguais chama-se <ruby>持碁<rt>じご</rt></ruby> (jigo), e com o komi de meio ponto ele não acontece.</p>
+        </details>
+
+        <details>
+          <summary>8. Contagem japonesa (território)</summary>
+          <p>Nas regras japonesas, conta-se o <strong>território</strong> (<ruby>地<rt>じ</rt></ruby>, ji): os pontos vazios cercados só por pedras de uma cor, mais os <strong>prisioneiros</strong>. Prisioneiros são as pedras capturadas durante a partida mais as pedras mortas retiradas no fim.</p>
+          <div class="aula solo"><div class="mini-go" data-g="bbXOww/bbXOww/bbXOww" data-borda="tlb" data-alt="Território preto e branco"></div><p>Os quadradinhos mostram o território: os pontos vazios cercados por um lado só. Neste exemplo, o Preto tem 6 pontos e o Branco tem 6. Cada ponto vale 1.</p></div>
+          <ul>
+            <li>As pedras vivas que ficam no tabuleiro <strong>não</strong> valem pontos na contagem japonesa.</li>
+            <li>Os pontos vazios que tocam as duas cores (os <ruby>駄目<rt>だめ</rt></ruby> dame, "neutros") não valem nada para ninguém.</li>
+            <li>No fim, o Branco soma o <strong>komi</strong>. Quem tiver mais pontos vence, e a vitória é dada pela diferença (por exemplo, "Preto vence por 3,5").</li>
+          </ul>
+          <div class="dica"><strong>Exemplo:</strong> Preto tem 30 pontos de território e 4 prisioneiros (34). Branco tem 28 de território e 2 prisioneiros (30), mais 6,5 de komi (36,5). O Branco vence por 2,5.</div>
+          <p>No seki (veja a seção 11), os pontos vazios que ficam entre os dois grupos também não valem nada. No IgoON!, nas regras japonesas, marque essas regiões como neutras na fase de marcação.</p>
+        </details>
+
+        <details>
+          <summary>9. Contagem chinesa (área)</summary>
+          <p>Nas regras chinesas conta-se a <strong>área</strong>: as pedras vivas que cada jogador tem no tabuleiro <strong>mais</strong> o território que ele cerca. Os prisioneiros <strong>não</strong> entram na conta. O Branco soma o komi (7,5 neste site).</p>
+          <ul>
+            <li>Como as pedras também contam, jogar dentro do próprio território não custa pontos.</li>
+            <li>O resultado costuma ser o mesmo da contagem japonesa, com raras diferenças de um ponto.</li>
+            <li>Os pontos neutros não valem nada, e o seki é resolvido naturalmente: as pedras vivas contam, e os pontos vazios compartilhados não.</li>
+          </ul>
+          <div class="dica">No IgoON!, mesmo com as regras chinesas, o suicídio continua proibido, e o ko usa o superko posicional (explicado na seção 6).</div>
+        </details>
+
+        <details>
+          <summary>10. Komi e handicap</summary>
+          <p>O Preto joga primeiro, e isso é uma vantagem. Para equilibrar, o Branco recebe pontos de compensação no final, o <strong>komi</strong> (コミ). Neste site os valores padrão são <strong>6,5</strong> nas regras japonesas e <strong>7,5</strong> nas chinesas. O ",5" existe para <strong>não haver empate</strong>.</p>
+          <p>Quando os dois jogadores têm forças diferentes, usa-se o <strong>handicap</strong> (<ruby>置碁<rt>おきご</rt></ruby>, okigo): o jogador mais fraco joga de Preto, coloca de 2 a 9 pedras nos pontos de estrela antes de a partida começar, e o Branco joga primeiro. Cada pedra de handicap equivale, grosso modo, a um grau de diferença de força. Uma partida sem handicap, entre jogadores parecidos, é chamada de <ruby>互先<rt>たがいせん</rt></ruby> (tagaisen).</p>
+          <ul>
+            <li>No tabuleiro 9×9 o handicap vai até 5 pedras. Em 13×13 e 19×19, até 9.</li>
+            <li>Com handicap, o komi padrão do IgoON! é <strong>0,5</strong>, só para evitar empate. Você pode editar o komi à vontade.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>11. Vida e morte, olhos e seki</summary>
+          <p>Um grupo que o adversário nunca consegue capturar está <strong>vivo</strong> (<ruby>生<rt>い</rt></ruby>き, iki). Um grupo que acaba capturado está <strong>morto</strong> (<ruby>死<rt>し</rt></ruby>に, shini). A ciência de saber quem é quem se chama <ruby>死活<rt>しかつ</rt></ruby> (shikatsu), e os problemas para treiná-la, <ruby>詰碁<rt>つめご</rt></ruby> (tsumego).</p>
+          <h4>Dois olhos</h4>
+          <p>Um <strong>olho</strong> (<ruby>眼<rt>め</rt></ruby>, me) é um espaço vazio dentro de um grupo. O adversário não pode jogar dentro de um olho (seria suicídio) a menos que isso capture o grupo. Um grupo com <strong>dois olhos separados</strong> (<ruby>二眼<rt>にがん</rt></ruby>, nigan) nunca pode ser capturado, e por isso está vivo: o adversário teria de preencher os dois olhos, mas ao fechar o primeiro o grupo ainda tem a liberdade do segundo, e ao jogar no segundo a sua pedra seria suicídio.</p>
+          <div class="aula solo"><div class="mini-go" data-g="O.O.O/OOOOO/XXXXX" data-borda="tlr" data-alt="Grupo branco com dois olhos"></div><p>O grupo branco tem dois olhos separados, nos pontos vazios. Está vivo para sempre.</p></div>
+          <h4>Espaço para olhos e ponto vital</h4>
+          <p>Um espaço de três pontos em linha, por exemplo, vira dois olhos se o defensor jogar no ponto do meio, e vira um olho só (morte) se o atacante jogar lá. Esse ponto se chama <strong>ponto vital</strong> (<ruby>急所<rt>きゅうしょ</rt></ruby>, kyūsho). O modo <strong>Problemas</strong> treina exatamente isso.</p>
+          <h4>Olho falso</h4>
+          <p>Um <strong>olho falso</strong> (<ruby>欠<rt>か</rt></ruby>け<ruby>眼<rt>め</rt></ruby>, kakeme) parece um olho mas não é: alguma das pedras que o cercam pode ser cortada e capturada pelo adversário, e então o espaço deixa de ser um olho de verdade. Para contar olhos, confira sempre os pontos nas diagonais.</p>
+          <h4>Seki</h4>
+          <p>No <strong>seki</strong> (セキ), dois grupos de cores diferentes compartilham liberdades, e quem jogar primeiro nelas entra em atari e é capturado. Por isso ninguém joga, e os dois grupos ficam vivos sem território. Veja o exemplo na lição de seki.</p>
+          <div class="aula solo"><div class="mini-go" data-g="OO+XX/OO+XX/OOOXX" data-borda="tl" data-alt="Seki: duas liberdades compartilhadas"></div><p>Os dois pontos com marca são liberdades compartilhadas pelos dois grupos. Quem jogar num deles fica em atari e perde o grupo.</p></div>
+        </details>
+
+        <details>
+          <summary>12. Estratégia: abertura, meio e final</summary>
+          <p>Uma partida de Go costuma ter três fases:</p>
+          <ul>
+            <li><strong>Abertura</strong> (<ruby>布石<rt>ふせき</rt></ruby>, fuseki, ou <ruby>序盤<rt>じょばん</rt></ruby>, joban): os jogadores ocupam os espaços grandes do tabuleiro. A ordem de valor costuma ser: <strong>cantos</strong> (<ruby>隅<rt>すみ</rt></ruby>, sumi), depois as <strong>bordas</strong> (<ruby>辺<rt>へん</rt></ruby>, hen) e por último o <strong>centro</strong> (<ruby>中央<rt>ちゅうおう</rt></ruby>, chūō). Isso porque nos cantos precisa-se de menos pedras para cercar território.</li>
+            <li><strong>Meio de jogo</strong> (<ruby>中盤<rt>ちゅうばん</rt></ruby>, chūban): os grupos entram em contato, e começam lutas, capturas e invasões. Estas ideias ajudam: mantenha seus grupos ligados ou com espaço para dois olhos, ataque os grupos fracos do adversário, e jogue lances que servem a mais de um objetivo.</li>
+            <li><strong>Final</strong> (<ruby>寄<rt>よ</rt></ruby>せ, yose, ou <ruby>終盤<rt>しゅうばん</rt></ruby>, shūban): as fronteiras entre os territórios são fechadas, ponto por ponto, e a ordem dos lances é decidida pelo valor de cada um.</li>
+          </ul>
+          <p>Algumas palavras úteis: <ruby>先手<rt>せんて</rt></ruby> (sente) é um lance que obriga o adversário a responder, deixando você livre para jogar depois onde quiser. <ruby>後手<rt>ごて</rt></ruby> (gote) é o contrário: você usa a vez e ele pode jogar onde quiser. <ruby>定石<rt>じょうせき</rt></ruby> (joseki) são sequências conhecidas e equilibradas. <ruby>手筋<rt>てすじ</rt></ruby> (tesuji) é a jogada certa e engenhosa numa situação tática. <ruby>中手<rt>なかで</rt></ruby> (nakade) é jogar dentro do espaço do olho do adversário para impedir dois olhos.</p>
+          <div class="dica">Dicas para quem está começando: joguem em 9×9, evitem ficar com pedras soltas sem espaço para viver, pensem no que o adversário quer fazer antes de cada lance, e <strong>perca muitas partidas</strong>. Há um provérbio entre jogadores: perca as primeiras 50 partidas o mais rápido possível.</div>
+        </details>
+
+        <details>
+          <summary>13. Resumo das regras</summary>
+          <ol>
+            <li>O Preto joga primeiro, e os jogadores se alternam. Com handicap, o Branco joga primeiro.</li>
+            <li>Cada lance é uma pedra numa interseção vazia, ou passar.</li>
+            <li>As pedras não se movem. Só saem do tabuleiro se forem capturadas.</li>
+            <li>Um grupo é capturado quando perde todas as liberdades, e as pedras viram prisioneiros.</li>
+            <li>Suicídio é proibido, a menos que a jogada capture.</li>
+            <li>Ko: não se pode recriar uma posição de modo que o jogo repita sem fim (ko simples nas regras japonesas, superko nas chinesas).</li>
+            <li>Dois passes seguidos encerram a partida. Marcam-se as pedras mortas e conta-se.</li>
+            <li>Japonesa: território mais prisioneiros. Chinesa: pedras mais território. O Branco soma o komi.</li>
+          </ol>
+        </details>
+      </div>
+
+      <!-- ===================== ABA 3: TERMOS ===================== -->
+      <div class="modal-body" id="painel-termos" role="tabpanel" aria-labelledby="aba-termos" hidden>
+        <p class="intro-ajuda">Os termos do Go em japonês, com kanji, leitura em hiragana (o furigana, o texto pequeno em cima) e romaji. As palavras escritas em katakana não têm furigana, porque já são escritas com letras de som.</p>
+        <div class="tabela-termos" role="table" aria-label="Termos em japonês">
+          <div class="tt-cab" role="row"><span role="columnheader">Japonês</span><span role="columnheader">Romaji</span><span role="columnheader">Significado</span></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="button" data-fechar data-foco>Entendi, vamos jogar!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Área do jogo -->
+  <main id="main">
+    <div id="modos" class="seg modos" role="tablist" aria-label="Modo">
+      <button class="seg-btn modo-btn" type="button" role="tab" data-modo="jogar" aria-selected="true" aria-pressed="true">Jogar</button>
+      <button class="seg-btn modo-btn" type="button" role="tab" data-modo="licoes" aria-selected="false" aria-pressed="false">Lições</button>
+      <button class="seg-btn modo-btn" type="button" role="tab" data-modo="problemas" aria-selected="false" aria-pressed="false">Problemas</button>
+    </div>
+
+    <section id="game-area">
+      <div id="coluna-tabuleiro">
+        <div class="jogador" id="jog-topo"><span class="jog-nome"></span><span class="jog-capt"></span><span class="jog-vant"></span></div>
+        <div id="board-stage">
+          <div id="board-wrap">
+            <div id="goban" tabindex="0" aria-label="Tabuleiro de Go"></div>
+          </div>
+        </div>
+        <div class="jogador" id="jog-base"><span class="jog-nome"></span><span class="jog-capt"></span><span class="jog-vant"></span></div>
+      </div>
+
+      <div id="coluna-controles">
+        <div id="message-container"><div id="message-area" role="status" aria-live="polite"></div></div>
+
+        <!-- ================= MODO JOGAR ================= -->
+        <div id="modo-jogar" class="painel-modo">
+          <button id="iniciar-btn" class="btn btn-primary" type="button" hidden>Iniciar partida</button>
+
+          <div id="marcacao" hidden>
+            <p id="marcacao-txt"></p>
+            <div class="toolbar">
+              <button id="sugerir-btn" class="tool-btn" type="button">Sugerir</button>
+              <button id="contar-btn" class="tool-btn tool-forte" type="button">Contar</button>
+              <button id="retomar-btn" class="tool-btn" type="button">Continuar jogando</button>
+            </div>
+          </div>
+
+          <div id="placar" hidden></div>
+
+          <div id="revisao" hidden>
+            <div class="rev-linha">
+              <button id="rev-ini" class="tool-btn" type="button" aria-label="Ir ao começo">⏮</button>
+              <button id="rev-ant" class="tool-btn" type="button" aria-label="Lance anterior">◀</button>
+              <span id="rev-pos" class="rev-pos" aria-live="polite"></span>
+              <button id="rev-prox" class="tool-btn" type="button" aria-label="Próximo lance">▶</button>
+              <button id="rev-fim" class="tool-btn" type="button" aria-label="Ir ao fim">⏭</button>
+            </div>
+            <div class="rev-linha">
+              <button id="rev-continuar" class="tool-btn" type="button">Continuar daqui</button>
+              <button id="rev-sair" class="tool-btn" type="button">Sair da revisão</button>
+            </div>
+          </div>
+
+          <div id="toolbar" class="toolbar">
+            <button id="passar-btn" class="tool-btn" type="button">Passar</button>
+            <button id="undo-btn" class="tool-btn" type="button">Desfazer</button>
+            <button id="hint-btn" class="tool-btn" type="button">Dica</button>
+            <button id="terr-btn" class="tool-btn" type="button">Território</button>
+            <button id="resign-btn" class="tool-btn" type="button">Desistir</button>
+          </div>
+
+          <button id="restart-btn" class="btn btn-primary" type="button">Novo jogo</button>
+
+          <div id="config" aria-label="Configuração da partida">
+            <div class="linha-cfg">
+              <span class="rotulo-cfg">Jogar contra</span>
+              <div id="oponente" class="seg" role="group" aria-label="Oponente">
+                <button class="seg-btn" type="button" data-op="cpu" aria-pressed="true">Computador</button>
+                <button class="seg-btn" type="button" data-op="amigo" aria-pressed="false">Amigo</button>
+              </div>
+            </div>
+
+            <div id="bloco-cpu">
+              <div class="acc" id="acc-nivel">
+                <button class="acc-btn" id="nivel-btn" type="button" aria-expanded="false" aria-controls="nivel-painel">
+                  <span class="opc-txt"><span class="nivel-rotulo">Nível</span><b id="nivel-atual">Iniciante</b></span>
+                  <span class="ic" id="nivel-chevron"></span>
+                </button>
+                <div class="acc-panel" id="nivel-painel" role="region" aria-labelledby="nivel-btn">
+                  <div><div id="nivel-lista" role="radiogroup" aria-label="Nível do computador"></div></div>
+                </div>
+              </div>
+              <div class="linha-cfg">
+                <span class="rotulo-cfg">Sua cor</span>
+                <div id="cor" class="seg" role="group" aria-label="Sua cor">
+                  <button class="seg-btn" type="button" data-cor="1" aria-pressed="true">Preto</button>
+                  <button class="seg-btn" type="button" data-cor="2" aria-pressed="false">Branco</button>
+                  <button class="seg-btn" type="button" data-cor="0" aria-pressed="false">Sorteio</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="linha-cfg">
+              <span class="rotulo-cfg">Tabuleiro</span>
+              <div id="tamanho" class="seg" role="group" aria-label="Tamanho do tabuleiro">
+                <button class="seg-btn" type="button" data-n="9" aria-pressed="true">9×9</button>
+                <button class="seg-btn" type="button" data-n="13" aria-pressed="false">13×13</button>
+                <button class="seg-btn" type="button" data-n="19" aria-pressed="false">19×19</button>
+              </div>
+            </div>
+            <div class="linha-cfg">
+              <span class="rotulo-cfg">Regras</span>
+              <div id="regras" class="seg" role="group" aria-label="Regras">
+                <button class="seg-btn" type="button" data-r="jp" aria-pressed="true">Japonesa</button>
+                <button class="seg-btn" type="button" data-r="cn" aria-pressed="false">Chinesa</button>
+              </div>
+            </div>
+            <div class="linha-cfg">
+              <span class="rotulo-cfg">Handicap</span>
+              <div class="passo" id="handicap" role="group" aria-label="Handicap">
+                <button class="passo-btn" type="button" data-d="-1" aria-label="Menos uma pedra">−</button>
+                <output id="handicap-val" aria-live="polite">0</output>
+                <button class="passo-btn" type="button" data-d="1" aria-label="Mais uma pedra">+</button>
+              </div>
+            </div>
+            <div class="linha-cfg">
+              <span class="rotulo-cfg">Komi</span>
+              <div class="passo" id="komi" role="group" aria-label="Komi">
+                <button class="passo-btn" type="button" data-d="-1" aria-label="Menos meio ponto">−</button>
+                <output id="komi-val" aria-live="polite">6,5</output>
+                <button class="passo-btn" type="button" data-d="1" aria-label="Mais meio ponto">+</button>
+              </div>
+            </div>
+
+            <label class="opcao" id="bloco-confirma">
+              <span class="opc-txt"><span>Confirmar lance (dois toques)</span></span>
+              <input type="checkbox" role="switch" id="confirmar" /><i class="sw" aria-hidden="true"></i>
+            </label>
+            <label class="opcao">
+              <span class="opc-txt"><span>Mostrar coordenadas</span></span>
+              <input type="checkbox" role="switch" id="coords" /><i class="sw" aria-hidden="true"></i>
+            </label>
+
+            <p id="trava-aviso" aria-live="polite"></p>
+          </div>
+
+          <div class="toolbar" id="arquivo-barra">
+            <button id="sgf-salvar" class="tool-btn" type="button">Salvar SGF</button>
+            <button id="sgf-abrir" class="tool-btn" type="button">Abrir SGF</button>
+            <button id="rev-abrir" class="tool-btn" type="button">Revisar</button>
+            <input id="sgf-arquivo" type="file" accept=".sgf,text/plain" hidden />
+          </div>
+
+          <div id="lances-caixa">
+            <div class="lances-topo"><span>Lances</span><span id="lances-info"></span></div>
+            <ol id="lances" aria-label="Lista de lances"></ol>
+          </div>
+        </div>
+
+        <!-- ================= MODO LIÇÕES ================= -->
+        <div id="modo-licoes" class="painel-modo" hidden>
+          <div id="licoes-lista"></div>
+          <div id="licao-ativa" hidden>
+            <div class="lic-topo">
+              <button id="lic-voltar" class="tool-btn" type="button">‹ Lições</button>
+              <span id="lic-titulo"></span>
+              <span id="lic-passo"></span>
+            </div>
+            <div id="lic-texto" class="lic-texto"></div>
+            <div id="lic-opcoes" class="lic-opcoes" role="group" aria-label="Respostas"></div>
+            <div class="toolbar">
+              <button id="lic-reiniciar" class="tool-btn" type="button">Refazer</button>
+              <button id="lic-proximo" class="tool-btn tool-forte" type="button" disabled>Próximo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= MODO PROBLEMAS ================= -->
+        <div id="modo-problemas" class="painel-modo" hidden>
+          <div id="prob-lista"></div>
+          <div id="prob-ativo" hidden>
+            <div class="lic-topo">
+              <button id="prob-voltar" class="tool-btn" type="button">‹ Problemas</button>
+              <span id="prob-titulo"></span>
+              <span id="prob-num"></span>
+            </div>
+            <div id="prob-texto" class="lic-texto"></div>
+            <div class="toolbar">
+              <button id="prob-dica" class="tool-btn" type="button">Dica</button>
+              <button id="prob-solucao" class="tool-btn" type="button">Ver solução</button>
+              <button id="prob-reiniciar" class="tool-btn" type="button">Reiniciar</button>
+            </div>
+            <div class="toolbar">
+              <button id="prob-ant" class="tool-btn" type="button">‹ Anterior</button>
+              <button id="prob-prox" class="tool-btn tool-forte" type="button">Próximo ›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p class="assinatura-final">© Christian, 2026</p>
+  </footer>
+</body>
+</html>

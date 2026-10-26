@@ -1,0 +1,1273 @@
+/* ==========================================================================
+   on.css: base compartilhada dos jogos ON!  (versão 2.0.0, a mesma do on.js)
+   Este arquivo é IDÊNTICO em todos os jogos e na hub. Só mexa nele aqui (/_shared) e
+   copie para cada projeto (sync.ps1). O CSS de cada jogo fica em arquivo próprio.
+
+   Índice
+   1. Variáveis e temas (claro/escuro)
+   2. Reset & base
+   3. Header fixo
+   4. Botões
+   5. Overlay & modais (padrão DiciON!)
+   6. Rodapé (padrão 2048ON!)
+   7. Menu lateral (drawer)
+   8. Componentes de conteúdo (exemplos do "Como Jogar", dicas)
+   9. Scrollbar
+   10. Acessibilidade e redução de animações
+   11. Responsividade
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Variáveis e temas
+   ========================================================================== */
+:root {
+    /* Paleta ON! */
+    --primary-blue: #0d3c75;
+    --secondary-blue: #104a8b;
+    --dark-blue: #062f51;
+    --light-blue: #e3f2fd;
+    --accent-blue: #90caf9;
+
+    /* Feedback */
+    --correct: #43a047;
+    --correct-dark: #2e7d32;
+    --semi-correct: #fbc02d;
+    --semi-correct-dark: #f9a825;
+    --wrong: #37474f;
+    --wrong-dark: #263238;
+    --danger: #d32f2f;
+    --danger-dark: #b71c1c;
+
+    /* Superfícies que mudam com o tema */
+    --header-bg: rgba(6, 47, 81, 0.98);
+    --drawer-bg: linear-gradient(135deg, #08233b, #062f51);
+    --modal-bg: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    --modal-text: #062f51;
+    --modal-title: #0d3c75;
+    --modal-line: rgba(144, 202, 249, 0.45);
+    --modal-sub: #104a8b;
+
+    /* Layout */
+    --max-width: 500px;
+    --header-height: 60px;
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Scrollbar */
+    --scroll-thumb: rgba(144, 202, 249, 0.38);
+    --scroll-thumb-hover: rgba(144, 202, 249, 0.7);
+    --scroll-track: rgba(6, 47, 81, 0.35);
+}
+
+/* Modo escuro: mesma identidade azul, só que mais profundo */
+html[data-tema="escuro"] {
+    --primary-blue: #071a33;
+    --secondary-blue: #0a2749;
+    --dark-blue: #030f1f;
+    --light-blue: #dbe9f7;
+    --header-bg: rgba(3, 12, 24, 0.98);
+    --drawer-bg: linear-gradient(135deg, #040e1b, #02070f);
+    --modal-bg: linear-gradient(135deg, #1b2a3d, #142132);
+    --modal-text: #dbe7f5;
+    --modal-title: #90caf9;
+    --modal-line: rgba(144, 202, 249, 0.3);
+    --modal-sub: #bbdefb;
+    --scroll-track: rgba(2, 8, 16, 0.5);
+    color-scheme: dark;
+}
+
+
+/* ==========================================================================
+   2. Reset & base (mobile-first)
+   ========================================================================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    /* fundo sob a scrollbar: sem isso a trilha translúcida ficaria sobre branco */
+    background: var(--primary-blue);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    /* reserva o espaço da barra: abrir menu/modal não faz a página "pular" */
+    scrollbar-gutter: stable;
+}
+
+html.trava {
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+    color: var(--light-blue);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* o header é fixo: reserva o espaço dele no topo */
+    padding-top: var(--header-height);
+    padding-bottom: var(--safe-area-inset-bottom);
+    border: 2px solid rgba(144, 202, 249, 0.3);
+    overflow-x: hidden;
+}
+
+button {
+    font-family: inherit;
+    touch-action: manipulation;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.so-leitor {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+
+/* ==========================================================================
+   3. Header fixo
+   ========================================================================== */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+    padding: 0 16px;
+    background: var(--header-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(144, 202, 249, 0.4);
+    border-left: 1px solid rgba(144, 202, 249, 0.2);
+    border-right: 1px solid rgba(144, 202, 249, 0.2);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+header h1 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--light-blue);
+    text-align: center;
+    flex: 1;
+    text-shadow: 0 0 10px rgba(144, 202, 249, 0.5);
+}
+
+#menu-btn,
+.header-btn {
+    background: rgba(227, 242, 253, 0.1);
+    border: 2px solid rgba(144, 202, 249, 0.5);
+    color: var(--light-blue);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    min-width: 44px;
+    min-height: 44px;
+}
+
+#menu-btn:active,
+.header-btn:active {
+    background: rgba(227, 242, 253, 0.2);
+    transform: scale(0.95);
+    border-color: rgba(144, 202, 249, 0.8);
+}
+
+
+/* ==========================================================================
+   4. Botões
+   ========================================================================== */
+.btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.6);
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    min-height: 44px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1976d2, #1565c0);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--modal-title);
+    box-shadow: none;
+}
+
+.btn:active {
+    transform: translateY(2px);
+    border-color: rgba(144, 202, 249, 0.9);
+}
+
+.btn-primary:active {
+    box-shadow: 0 3px 10px rgba(25, 118, 210, 0.4);
+}
+
+/* Botão "Novo jogo" padronizado nos três jogos */
+#restart-btn {
+    margin-bottom: 12px;
+}
+
+
+/* ==========================================================================
+   5. Overlay & modais (padrão DiciON!)
+   ========================================================================== */
+#overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+    display: none;
+}
+
+#overlay:not([hidden]) {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* o blur é caro em celular modesto: só onde há folga */
+@media (min-width: 768px) {
+    #overlay {
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    padding: 20px;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.3s, opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.modal[aria-hidden="false"] {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    width: min(94%, 500px);
+    max-height: 88vh;
+    max-height: 88dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--modal-bg);
+    color: var(--modal-text);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border: 3px solid rgba(144, 202, 249, 0.6);
+    overflow: hidden;
+}
+
+.modal[aria-hidden="false"] .modal-content {
+    animation: modalSlideUp 0.4s var(--ease);
+}
+
+/* título fixo no topo, corpo rolável, ações fixas embaixo */
+.modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 20px 12px 24px;
+    border-bottom: 1px solid var(--modal-line);
+}
+
+.modal-head h2 {
+    color: var(--modal-title);
+    font-size: 1.4rem;
+    text-shadow: 0 0 5px rgba(144, 202, 249, 0.3);
+}
+
+.modal-x {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--modal-line);
+    background: transparent;
+    color: var(--modal-title);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.modal-x:active {
+    background: rgba(144, 202, 249, 0.25);
+    transform: scale(0.92);
+}
+
+.modal-body {
+    padding: 16px 24px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    line-height: 1.55;
+}
+
+.modal-body > * + * {
+    margin-top: 12px;
+}
+
+.modal-body h3 {
+    color: var(--modal-title);
+    font-size: 1.05rem;
+    margin-top: 20px;
+}
+
+.modal-body h3:first-child {
+    margin-top: 0;
+}
+
+.modal-body ul,
+.modal-body ol {
+    list-style: none;
+    counter-reset: passo;
+}
+
+.modal-body li {
+    margin-bottom: 10px;
+    padding-left: 10px;
+    border-left: 2px solid var(--modal-line);
+}
+
+.modal-body ol > li {
+    counter-increment: passo;
+}
+
+.modal-body ol > li::before {
+    content: counter(passo) ". ";
+    font-weight: 800;
+    color: var(--modal-title);
+}
+
+.modal-body kbd {
+    display: inline-block;
+    padding: 0 6px;
+    border: 1px solid var(--modal-line);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    font: 600 0.85em 'Courier New', monospace;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 12px 24px 20px;
+    border-top: 1px solid var(--modal-line);
+}
+
+.modal-actions .btn {
+    min-width: 120px;
+    padding: 12px 20px;
+    font-size: 1rem;
+}
+
+/* confirmação (novo jogo etc.): sem cabeçalho/rolagem, mais compacta */
+#confirm-modal .modal-content {
+    width: min(92%, 420px);
+}
+
+#confirm-modal .modal-body {
+    padding-top: 20px;
+}
+
+
+/* ==========================================================================
+   6. Rodapé (padrão 2048ON!): fora do <main>, só a assinatura
+   ========================================================================== */
+footer {
+    align-self: stretch;
+    width: 100%;
+    text-align: center;
+    padding: 16px 0 8px;
+    margin-top: 10px;
+    z-index: 10;
+}
+
+.assinatura-final {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #a7c7f7;
+    margin: 8px 0 0;
+    font-weight: 500;
+    opacity: 0.8;
+    border-top: 1px solid rgba(144, 202, 249, 0.2);
+    padding-top: 8px;
+    width: 100%; /* a linha vai de ponta a ponta da página */
+}
+
+
+/* ==========================================================================
+   7. Menu lateral (drawer)
+   ========================================================================== */
+#drawer {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 88%;
+    max-width: 340px;
+    transform: translateX(-100%);
+    transition: transform 0.3s var(--ease);
+    background: var(--drawer-bg);
+    color: var(--light-blue);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    /* o menu não rola: quem rola é .drawer-rolagem, e o cabeçalho fica parado no topo */
+    overflow: hidden;
+    overscroll-behavior: contain;
+    border-right: 3px solid rgba(144, 202, 249, 0.5);
+    visibility: hidden;
+    transition: transform 0.3s var(--ease), visibility 0s 0.3s;
+    will-change: transform;
+}
+
+#drawer.open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.3s var(--ease), visibility 0s;
+    /* a sombra só existe com o menu aberto (fechada, vazava na borda da tela) */
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+}
+
+.drawer-header {
+    flex: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* sem fundo próprio: aparece o mesmo degradê do menu, então a cor é idêntica */
+    padding: max(20px, env(safe-area-inset-top)) 18px 16px;
+    border-bottom: 2px solid rgba(144, 202, 249, 0.3);
+}
+
+/* área que rola (tudo menos o cabeçalho) */
+.drawer-rolagem {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 18px calc(18px + var(--safe-area-inset-bottom));
+}
+
+.drawer-header h2 {
+    font-size: 1.4rem;
+    color: #bbdefb;
+    text-shadow: 0 0 8px rgba(144, 202, 249, 0.4);
+}
+
+#close-drawer {
+    background: rgba(227, 242, 253, 0.1);
+    border: 2px solid var(--light-blue);
+    color: var(--light-blue);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+#close-drawer:active {
+    background: rgba(227, 242, 253, 0.25);
+    transform: rotate(90deg);
+    border-color: rgba(144, 202, 249, 0.8);
+}
+
+.d-sec {
+    padding: 14px 0 6px;
+}
+
+.d-sec h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(144, 202, 249, 0.85);
+    margin-bottom: 10px;
+}
+
+.d-sec ul {
+    list-style: none;
+}
+
+.d-sec li + li {
+    margin-top: 8px;
+}
+
+/* --- estatísticas --- */
+.stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.stat {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(144, 202, 249, 0.25);
+    background: rgba(144, 202, 249, 0.05);
+}
+
+.stat.larga {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.stat b {
+    display: block;
+    font-size: 1.25rem;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.stat.larga b {
+    font-size: 1rem;
+}
+
+.stat span {
+    font-size: 0.72rem;
+    opacity: 0.75;
+}
+
+.barras {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 4px;
+    font-size: 0.72rem;
+}
+
+.barras div {
+    display: grid;
+    grid-template-columns: 14px 1fr;
+    gap: 6px;
+    align-items: center;
+}
+
+.barras i {
+    display: block;
+    min-width: 18px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(144, 202, 249, 0.35);
+    color: #fff;
+    font-style: normal;
+    font-weight: 700;
+    text-align: right;
+    transform-origin: left;
+}
+
+.barras i.zero {
+    background: none;
+    padding: 1px 0;
+    min-width: 0;
+    text-align: left;
+    opacity: 0.55;
+    font-weight: 500;
+}
+
+.barras .melhor i {
+    background: var(--correct);
+}
+
+.d-link {
+    margin-top: 10px;
+    background: none;
+    border: none;
+    color: rgba(144, 202, 249, 0.8);
+    font-size: 0.78rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+/* --- configurações (interruptores) --- */
+.opcao {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.25);
+    background: rgba(144, 202, 249, 0.05);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.opcao + .opcao {
+    margin-top: 8px;
+}
+
+.opcao input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sw {
+    position: relative;
+    flex-shrink: 0;
+    width: 44px;
+    height: 24px;
+    border-radius: 999px;
+    background: rgba(144, 202, 249, 0.2);
+    border: 2px solid rgba(144, 202, 249, 0.5);
+    transition: background 0.25s ease;
+}
+
+.sw::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--light-blue);
+    transition: transform 0.25s var(--ease);
+}
+
+.opcao input:checked + .sw {
+    background: #1976d2;
+    border-color: rgba(144, 202, 249, 0.9);
+}
+
+.opcao input:checked + .sw::after {
+    transform: translateX(20px);
+}
+
+.opcao input:focus-visible + .sw {
+    outline: 3px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+/* --- ícones SVG (Bootstrap Icons): herdam a cor do texto --- */
+.ic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 0;
+}
+
+/* ícone SVG dentro de um título ou texto corrido */
+.ic-inline {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.14em;
+    flex-shrink: 0;
+}
+
+.ic-inline.cafe {
+    width: auto;
+    height: 1.1em;
+}
+
+/* troca animada entre dois ícones (som ligado/mudo, sol/lua): o par fica empilhado e
+   o atributo data-b diz qual aparece. Com "Reduzir animações" a troca é instantânea. */
+.troca {
+    display: inline-grid;
+    line-height: 0;
+}
+
+.troca > svg {
+    grid-area: 1 / 1;
+    transition: transform 0.4s var(--ease), opacity 0.25s ease;
+}
+
+.troca > svg:first-child {
+    opacity: 1;
+    transform: none;
+}
+
+.troca > svg:last-child {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.3);
+}
+
+.troca[data-b="1"] > svg:first-child {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.3);
+}
+
+.troca[data-b="1"] > svg:last-child {
+    opacity: 1;
+    transform: none;
+}
+
+/* celular: parado (desligado) ou vibrando (ligado); ao trocar, balança da esquerda para a direita */
+.vib-ico {
+    display: inline-grid;
+    line-height: 0;
+}
+
+.vib-ico > svg {
+    grid-area: 1 / 1;
+    transition: opacity 0.2s ease;
+}
+
+.vib-ico > svg:first-child { opacity: 1; }
+.vib-ico > svg:last-child { opacity: 0; }
+.vib-ico[data-b="1"] > svg:first-child { opacity: 0; }
+.vib-ico[data-b="1"] > svg:last-child { opacity: 1; }
+
+.vib-ico.vibrando {
+    animation: on-vibra 0.5s linear both;
+}
+
+@keyframes on-vibra {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    10% { transform: translateX(-2px) rotate(-14deg); }
+    20% { transform: translateX(2px) rotate(14deg); }
+    30% { transform: translateX(-2px) rotate(-12deg); }
+    40% { transform: translateX(2px) rotate(12deg); }
+    50% { transform: translateX(-1.5px) rotate(-9deg); }
+    60% { transform: translateX(1.5px) rotate(9deg); }
+    70% { transform: translateX(-1px) rotate(-6deg); }
+    80% { transform: translateX(1px) rotate(5deg); }
+    90% { transform: translateX(0) rotate(-2deg); }
+}
+
+/* alto-falante: corpo parado, só as ondas e o X trocam (degradê escalonado) */
+.som-ico {
+    display: inline-flex;
+    line-height: 0;
+}
+
+.som-ico .onda,
+.som-ico .x-mudo {
+    transition: opacity 0.28s ease;
+}
+
+.som-ico .x-mudo { opacity: 1; }
+
+.som-ico .onda { opacity: 0; }
+
+.som-ico[data-b="1"] .x-mudo { opacity: 0; }
+
+.som-ico[data-b="1"] .onda { opacity: 1; }
+
+/* ligando: as ondas aparecem de dentro para fora; desligando: somem de fora para dentro */
+.som-ico[data-b="1"] .o1 { transition-delay: 0.04s; }
+.som-ico[data-b="1"] .o2 { transition-delay: 0.12s; }
+.som-ico[data-b="1"] .o3 { transition-delay: 0.2s; }
+.som-ico[data-b="0"] .o1 { transition-delay: 0.14s; }
+.som-ico[data-b="0"] .o2 { transition-delay: 0.07s; }
+.som-ico[data-b="0"] .o3 { transition-delay: 0s; }
+
+.opc-txt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+/* --- instalar app (só aparece quando o navegador permite) --- */
+#install-btn {
+    width: 100%;
+    margin: 6px 0 4px;
+}
+
+#install-btn:not([hidden]) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* --- acordeão das redes (só as 4 redes são recolhíveis) --- */
+.acc {
+    margin-top: 14px;
+}
+
+.acc-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.3);
+    background: rgba(144, 202, 249, 0.05);
+    color: var(--accent-blue);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.acc-btn:active {
+    background: rgba(227, 242, 253, 0.12);
+    border-color: rgba(144, 202, 249, 0.7);
+}
+
+.acc-btn svg {
+    flex-shrink: 0;
+    transition: transform 0.3s var(--ease);
+}
+
+.acc-btn[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+}
+
+.acc-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition: grid-template-rows 0.3s var(--ease), visibility 0s 0.3s;
+}
+
+.acc-panel.aberto {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition: grid-template-rows 0.3s var(--ease), visibility 0s;
+}
+
+.acc-panel > div {
+    overflow: hidden;
+    min-height: 0;
+}
+
+.redes {
+    list-style: none;
+    padding-top: 10px;
+}
+
+.redes li + li {
+    margin-top: 8px;
+}
+
+.redes a,
+.linha {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 600;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.3);
+    background: rgba(144, 202, 249, 0.05);
+    transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease, color 0.3s ease;
+}
+
+.redes a:active,
+.linha:active {
+    color: #fff;
+    background: rgba(227, 242, 253, 0.12);
+    border-color: rgba(144, 202, 249, 0.7);
+    transform: translateX(4px);
+}
+
+.redes svg,
+.linha svg {
+    flex-shrink: 0;
+}
+
+/* --- parte fixa: linha, pix e assinatura --- */
+/* fica colado no fim do menu; o traço de cima separa do resto */
+.drawer-footer {
+    margin-top: auto;
+    text-align: center;
+    padding-top: 18px;
+    border-top: 1px solid rgba(144, 202, 249, 0.2);
+}
+
+.drawer-rolagem > .acc {
+    margin-bottom: 22px;
+    flex-shrink: 0;
+}
+
+.drawer-rolagem > * {
+    flex-shrink: 0;
+}
+
+.pix-frame {
+    text-align: center;
+    margin-bottom: 16px;
+    /* a largura do quadro define o tamanho da letra (veja .pix-frame pre) */
+    container-type: inline-size;
+}
+
+/* O quadro do Pix nunca quebra linha: o tamanho da letra acompanha a largura
+   disponível (37 colunas de monoespaçada, cada uma com 0,6em). O on.js ainda
+   confere se coube e reduz mais um pouco quando a fonte do aparelho é mais larga. */
+.pix-frame pre {
+    margin: 0;
+    font-family: 'Courier New', monospace;
+    color: var(--accent-blue);
+    line-height: 1.3;
+    background: rgba(227, 242, 253, 0.05);
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 2px solid rgba(144, 202, 249, 0.3);
+    white-space: pre;
+    overflow: hidden;
+    box-sizing: border-box;
+    font-size: min(0.65rem, calc((100cqw - 16px) / 23.5));
+}
+
+/* QR Code: sempre quadrado (1:1), por mais estreita que fique a tela */
+#qrpix {
+    box-sizing: border-box;
+    width: min(80%, 200px);
+    height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: contain;
+    background: #fff;
+    padding: clamp(6px, 6%, 12px);
+    border-radius: 12px;
+    display: block;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border: 3px solid rgba(144, 202, 249, 0.5);
+}
+
+.assinatura {
+    font-size: 0.9rem;
+    color: var(--light-blue);
+    opacity: 0.8;
+    font-style: italic;
+    border-top: 1px solid rgba(144, 202, 249, 0.2);
+    padding-top: 12px;
+}
+
+
+/* ==========================================================================
+   8. Componentes de conteúdo ("Como Jogar")
+   ========================================================================== */
+.exemplo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(13, 60, 117, 0.08);
+    border: 1px dashed var(--modal-line);
+}
+
+html[data-tema="escuro"] .exemplo {
+    background: rgba(144, 202, 249, 0.07);
+}
+
+.ex-cel {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    background: #a6d4ff;
+    border: 2px solid #bbdefb;
+    color: var(--primary-blue);
+    user-select: none;
+}
+
+.ex-seta {
+    padding: 0 6px;
+    font-weight: 800;
+    color: var(--modal-title);
+}
+
+.dica {
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(251, 192, 45, 0.16);
+    border-left: 4px solid var(--semi-correct);
+    font-size: 0.95rem;
+}
+
+.legenda {
+    font-size: 0.85rem;
+    text-align: center;
+    opacity: 0.85;
+}
+
+
+/* ==========================================================================
+   9. Scrollbar (transparente, nas cores do site)
+   ========================================================================== */
+/* tremor da tela (vitória no DiciON!, derrota no 2048ON!, explosão no MinesON!):
+   ON.tremer(elemento) liga a classe e ela se desliga sozinha */
+@keyframes on-tremor {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(0); }
+    10% { transform: translate3d(-7px, 3px, 0) rotate(-0.6deg); }
+    20% { transform: translate3d(6px, -3px, 0) rotate(0.5deg); }
+    30% { transform: translate3d(-6px, -2px, 0) rotate(-0.5deg); }
+    40% { transform: translate3d(5px, 3px, 0) rotate(0.4deg); }
+    50% { transform: translate3d(-4px, 2px, 0) rotate(-0.3deg); }
+    60% { transform: translate3d(4px, -2px, 0) rotate(0.3deg); }
+    75% { transform: translate3d(-2px, 1px, 0); }
+    90% { transform: translate3d(1px, -1px, 0); }
+}
+
+.on-tremor {
+    animation: on-tremor 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--scroll-track);
+    box-shadow: inset 1px 0 0 rgba(144, 202, 249, 0.12);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(144, 202, 249, 0.55), rgba(25, 118, 210, 0.45));
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+    background: linear-gradient(90deg, rgba(144, 202, 249, 0.55), rgba(25, 118, 210, 0.45));
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(187, 222, 251, 0.85), rgba(66, 165, 245, 0.7));
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: rgba(227, 242, 253, 0.9);
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* fundo claro dos modais pede uma versão mais escura */
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(13, 60, 117, 0.08);
+    box-shadow: none;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(16, 74, 139, 0.4);
+    background-clip: padding-box;
+}
+
+html[data-tema="escuro"] .modal-body::-webkit-scrollbar-track {
+    background: rgba(2, 8, 16, 0.4);
+}
+
+html[data-tema="escuro"] .modal-body::-webkit-scrollbar-thumb {
+    background: rgba(144, 202, 249, 0.4);
+    background-clip: padding-box;
+}
+
+/* Firefox (que ignora ::-webkit-scrollbar) */
+@supports not selector(::-webkit-scrollbar) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scroll-thumb) transparent;
+    }
+
+    .modal-body {
+        scrollbar-color: rgba(16, 74, 139, 0.45) transparent;
+    }
+}
+
+
+/* ==========================================================================
+   10. Acessibilidade e redução de animações
+   ========================================================================== */
+:focus-visible {
+    outline: 3px solid var(--accent-blue);
+    outline-offset: 2px;
+}
+
+html[data-tema="escuro"] .modal-content :focus-visible {
+    outline-color: #fff;
+}
+
+/* ligado pelo "Reduzir animações" do menu (ou pela preferência do sistema) */
+html[data-reduzir="1"] *,
+html[data-reduzir="1"] *::before,
+html[data-reduzir="1"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+}
+
+
+/* ==========================================================================
+   11. Responsividade
+   ========================================================================== */
+@media (min-width: 768px) {
+    header {
+        padding: 0 24px;
+    }
+
+    header h1 {
+        font-size: 1.6rem;
+    }
+
+    /* hover só com ponteiro de verdade; no celular valem os :active */
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(25, 118, 210, 0.5);
+        border-color: rgba(144, 202, 249, 0.8);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(144, 202, 249, 0.18);
+        transform: translateY(-2px);
+        border-color: rgba(144, 202, 249, 0.9);
+    }
+
+    .linha:hover,
+    .redes a:hover {
+        color: #fff;
+        background: rgba(227, 242, 253, 0.12);
+        border-color: rgba(144, 202, 249, 0.7);
+        transform: translateX(4px);
+    }
+
+    .acc-btn:hover {
+        background: rgba(227, 242, 253, 0.12);
+        border-color: rgba(144, 202, 249, 0.7);
+    }
+
+    #close-drawer:hover {
+        background: rgba(227, 242, 253, 0.25);
+        transform: rotate(90deg);
+        border-color: rgba(144, 202, 249, 0.8);
+    }
+
+    .modal-x:hover {
+        background: rgba(144, 202, 249, 0.25);
+    }
+}
+
+@media (max-width: 520px) {
+    body {
+        font-size: 15px;
+    }
+
+    header h1 {
+        font-size: 1.2rem;
+    }
+
+    #menu-btn,
+    .header-btn {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* telas pequenas: o menu cobre a tela toda (o X fecha), sem faixa sobrando ao lado */
+    #drawer {
+        width: 100%;
+        max-width: none;
+        border-right: 0;
+    }
+
+    .modal {
+        padding: 14px;
+    }
+
+    .modal-content {
+        width: min(98%, 460px);
+    }
+
+    .modal-head {
+        padding: 16px 14px 10px 18px;
+    }
+
+    .modal-body {
+        padding: 14px 18px;
+    }
+
+    .modal-actions {
+        padding: 10px 18px 16px;
+    }
+}
+
+@media (max-width: 380px) {
+    .modal-head h2 {
+        font-size: 1.25rem;
+    }
+
+    .ex-cel {
+        width: 34px;
+        height: 34px;
+    }
+}
