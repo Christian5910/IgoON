@@ -116,6 +116,33 @@
     no._balanco = setTimeout(function () { no.classList.remove('vibrando'); }, 700);
   }
 
+  /* Tremor da tela: X no canto inferior direito quando desligado.
+     Ao ligar, o X se desfaz e o raio pisca enquanto oscila na diagonal
+     nos dois sentidos (↗ ↙), com amplitudes iguais e retorno à origem.
+     Sem brilho e independente de ON.tremer(). */
+  function iconeTremor(ligado, px) {
+    px = px || 20;
+    return '<span class="tremor-ico" data-b="' + (ligado ? '1' : '0') + '">' +
+      '<span class="tremor-raio">' + icone('tremor', px) + '</span>' +
+      '<svg class="tremor-x" xmlns="http://www.w3.org/2000/svg" ' +
+      'width="11" height="11" viewBox="0 0 12 12" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" ' +
+      'aria-hidden="true" focusable="false">' +
+      '<path d="M2 2 10 10"/><path d="M10 2 2 10"/>' +
+      '</svg></span>';
+  }
+
+  function atualizarTremorIcone(marca, ligado) {
+    var no = marca && marca.querySelector('.tremor-ico');
+    if (!no) return;
+    no.classList.remove('ativando');
+    no.setAttribute('data-b', ligado ? '1' : '0');
+    if (ligado && !ON.cfg.reduzir) {
+      void no.offsetWidth; // permite reiniciar após alternâncias rápidas
+      no.classList.add('ativando');
+    }
+  }
+
   /* Alto-falante animado: o corpo fica parado e só as "vibrações" (as 3 ondas e o X de mudo)
      trocam, uma de cada vez, com degradê. data-b="1" = som ligado. */
   var CORPO_SOM = 'M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06';
@@ -518,7 +545,8 @@
     if (k === 'som') return iconeSom(ON.cfg.som, 20);
     if (k === 'escuro') return iconeTroca('sol', 'lua', ON.cfg.escuro, 20);
     if (k === 'vibracao') return iconeVibracao(ON.cfg.vibracao, 20);
-    return icone({ reduzir: 'tartaruga', tremor: 'tremor' }[k], 20);
+    if (k === 'tremor') return iconeTremor(ON.cfg.tremor, 20);
+    return icone({ reduzir: 'tartaruga' }[k], 20);
   }
 
   function tituloSecao(id, nomeIcone, texto) {
@@ -723,6 +751,7 @@
       if (chave === 'som' || chave === 'escuro' || chave === 'vibracao') trocar(marca, i.checked); // troca com transição
       if (chave === 'som' && i.checked) ON.som('acerto');
       if (chave === 'vibracao' && i.checked) ON.vibrar(30);
+      if (chave === 'tremor') atualizarTremorIcone(marca, i.checked);
     });
 
     ouvir(document, 'keydown', function (e) {

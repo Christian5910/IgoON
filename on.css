@@ -94,12 +94,32 @@ html {
     background: var(--primary-blue);
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
-    /* reserva o espaço da barra: abrir menu/modal não faz a página "pular" */
-    scrollbar-gutter: stable;
+    /* Não reservar trilha vazia: deixa o navegador usar espaço só quando há
+       uma barra de rolagem realmente presente. Vale para PC e celular,
+       inclusive quando o DevTools emula apenas uma janela estreita. */
+    scrollbar-gutter: auto;
 }
 
+/* Quando um menu ou modal abre, a página de fundo não deve rolar,
+   mostrar scrollbar nem reservar a faixa lateral da barra. */
 html.trava {
     overflow: hidden;
+    scrollbar-gutter: auto;
+    scrollbar-width: none;
+}
+
+/* Protege também jogos cujo elemento body recebe rolagem própria. */
+html.trava body {
+    overflow-y: hidden;
+    scrollbar-gutter: auto;
+    scrollbar-width: none;
+}
+
+html.trava::-webkit-scrollbar,
+html.trava body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
 
 body {
@@ -774,6 +794,82 @@ footer {
     90% { transform: translateX(0) rotate(-2deg); }
 }
 
+/* Tremor da tela: X fora do raio, no canto inferior direito.
+   Ligado: o X se desfaz; o raio pisca e oscila em pequenos impulsos
+   diagonais e simétricos (↗ e ↙), voltando sempre ao ponto inicial.
+   Sem avanço horizontal acumulado, rotação ou brilho.
+   ON.tremer() não é alterado. */
+.tremor-ico {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex: none;
+    line-height: 0;
+    margin-right: 7px; /* espaço para o X externo sem sobrepor o rótulo */
+}
+
+.tremor-raio {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transform-origin: center;
+    will-change: transform;
+}
+
+.tremor-raio > svg {
+    display: block;
+}
+
+/* X pequeno para além do canto inferior direito, sem cobrir o raio.
+   O X não recebe o deslocamento nem o piscar da animação. */
+.tremor-x {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+}
+
+.tremor-x path {
+    stroke-dasharray: 12;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.24s var(--ease);
+}
+
+/* Ao ligar, o X se desfaz; ao desligar, volta a ser desenhado. */
+.tremor-ico[data-b="1"] .tremor-x path {
+    stroke-dashoffset: 12;
+}
+
+/* Tremor do ícone: rápido, discreto e sem deslocamento acumulado.
+   O raio oscila simetricamente ↗ ↙, com apenas 1.25px por eixo.
+   O X permanece no canto inferior direito quando desativado; sem brilho. */
+.tremor-ico.ativando .tremor-raio {
+    animation:
+        on-tremor-diagonal 0.38s 0.14s ease-in-out both,
+        on-tremor-pisca 0.38s 0.14s ease-in-out both;
+}
+
+/* Três oscilações curtas, retornando exatamente ao ponto inicial. */
+@keyframes on-tremor-diagonal {
+    0%    { transform: translate3d(0, 0, 0); }
+    8%    { transform: translate3d(1.25px, -1.25px, 0); }
+    24%   { transform: translate3d(-1.25px, 1.25px, 0); }
+    40%   { transform: translate3d(1.25px, -1.25px, 0); }
+    56%   { transform: translate3d(-1.25px, 1.25px, 0); }
+    72%   { transform: translate3d(1.25px, -1.25px, 0); }
+    88%   { transform: translate3d(-1.25px, 1.25px, 0); }
+    100%  { transform: translate3d(0, 0, 0); }
+}
+
+/* Piscar sutil, sincronizado com cada oscilação; nenhum brilho. */
+@keyframes on-tremor-pisca {
+    0%, 24%, 56%, 88%, 100% { opacity: 1; }
+    8%, 40%, 72% { opacity: 0.72; }
+}
+
 /* alto-falante: corpo parado, só as ondas e o X trocam (degradê escalonado) */
 .som-ico {
     display: inline-flex;
@@ -1269,5 +1365,35 @@ html[data-reduzir="1"] *::after {
     .ex-cel {
         width: 34px;
         height: 34px;
+    }
+}
+
+/* Dispositivos com interação predominantemente por toque: a rolagem
+   permanece funcionando, mas sem ocupar largura com barras invisíveis.
+   Diferente de max-width, não esconde a barra de PCs com janela estreita. */
+@media (hover: none) and (pointer: coarse) {
+    /* Sobrescreve o "stable" global somente nesses dispositivos. */
+    html {
+        scrollbar-gutter: auto;
+    }
+
+    html,
+    body,
+    #drawer,
+    .drawer-rolagem,
+    .modal-body {
+        scrollbar-width: none; /* Firefox e navegadores modernos */
+        scrollbar-gutter: auto;
+    }
+
+    /* Chromium / Safari: oculta a aparência sem impedir o scroll. */
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    #drawer::-webkit-scrollbar,
+    .drawer-rolagem::-webkit-scrollbar,
+    .modal-body::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
     }
 }
